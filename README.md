@@ -5,6 +5,12 @@ This software is currently quite limited in that it expects the tracks to be nam
 
 If the `dest_dir` flag is not provided, as is shown in the exmaples, the files will be renamed in-place. In this case, it is highly recommended that a backup of the files be made before running the software as it is still relatively new software.
 
+## Project links
+
+[![GoDoc](https://godoc.org/github.com/kward/venue-tracks?status.svg)](https://godoc.org/github.com/kward/venue-tracks)
+[![Travis CI](https://travis-ci.org/kward/venue-tracks.png?branch=master)](https://travis-ci.org/kward/venue-tracks)
+[![Coverage Status](https://coveralls.io/repos/github/kward/venue-tracks/badge.svg?branch=master)](https://coveralls.io/github/kward/venue-tracks?branch=master)
+
 ## Usage
 Perform a test run of renaming all tracks in the `~/tmp/audiofiles` directory using the `.
 
