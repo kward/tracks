@@ -1,0 +1,9 @@
+language: go
+
+go:
+  - 1.2
+  - tip
+
+install:
+  # http://gopkg.in/xmlpath.v2
+  - go get gopkg.in/xmlpath.v2
