@@ -14,9 +14,9 @@ var (
 
 	behavior  string
 	dryRun    = flag.Bool("dry_run", false, "Do a dry run.")
-	patchFile = flag.String("patchfile", "", "Venue patch file.")
-	srcDir    = flag.String("srcdir", ".", "Source directory.")
-	destDir   = flag.String("destdir", "", "Destination directory. Leave empty to rename in place.")
+	patchFile = flag.String("patch_file", "", "Venue patch file.")
+	srcDir    = flag.String("src_dir", ".", "Source directory.")
+	destDir   = flag.String("dest_dir", "", "Destination directory. Leave empty to rename in place.")
 )
 
 func init() {
