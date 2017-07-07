@@ -9,7 +9,6 @@ If the `dest_dir` flag is not provided, as is shown in the exmaples, the files w
 
 [![GoDoc](https://godoc.org/github.com/kward/venue-tracks?status.svg)](https://godoc.org/github.com/kward/venue-tracks)
 [![Travis CI](https://travis-ci.org/kward/venue-tracks.png?branch=master)](https://travis-ci.org/kward/venue-tracks)
-[![Coverage Status](https://coveralls.io/repos/github/kward/venue-tracks/badge.svg?branch=master)](https://coveralls.io/github/kward/venue-tracks?branch=master)
 
 ## Usage
 Perform a test run of renaming all tracks in the `~/tmp/audiofiles` directory using the `.
