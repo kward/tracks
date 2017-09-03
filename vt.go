@@ -9,12 +9,16 @@ import (
 	"github.com/kward/venue-tracks/vt"
 )
 
+const (
+	patchFileFlag = "patch_file"
+)
+
 var (
 	behaviors = map[string]bool{"rename": true, "move": true}
 
 	behavior  string
 	dryRun    = flag.Bool("dry_run", false, "Do a dry run.")
-	patchFile = flag.String("patch_file", "", "Venue patch file.")
+	patchFile = flag.String(patchFileFlag, "", "Venue patch file.")
 	srcDir    = flag.String("src_dir", ".", "Source directory.")
 	destDir   = flag.String("dest_dir", "", "Destination directory. Leave empty to rename in place.")
 )
@@ -36,7 +40,7 @@ func init() {
 		*destDir = *srcDir
 	}
 	if *patchFile == "" {
-		fmt.Printf("empty patchfile flag\n")
+		fmt.Printf("empty %s flag\n", patchFileFlag)
 		os.Exit(1)
 	}
 }
