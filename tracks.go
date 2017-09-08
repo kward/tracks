@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/kward/venue-tracks/vt"
+	"github.com/kward/tracks/venue"
 )
 
 const (
@@ -52,29 +52,26 @@ func main() {
 		fmt.Printf("error reading venue patch file %q; %s\n", *patchFile, err)
 		os.Exit(1)
 	}
-	venue := vt.NewVenue()
-	if err := venue.Parse(data); err != nil {
+	v := venue.NewVenue()
+	if err := v.Parse(data); err != nil {
 		fmt.Printf("error parsing the Venue data; %s\n", err)
 		os.Exit(1)
 	}
-	//fmt.Println("venue:", venue)
 
 	// Discover sessions and tracks.
-	sessions := vt.NewSessions()
+	sessions := venue.NewSessions()
 	if err := sessions.Discover(*srcDir); err != nil {
 		fmt.Printf("error discovering sessions; %s\n", err)
 		os.Exit(1)
 	}
-	//fmt.Println("sessions:", sessions)
 
 	// Map tracks to stage boxes.
 	for _, s := range sessions {
-		ts, err := venue.NameTracks(s.Tracks())
+		ts, err := v.NameTracks(s.Tracks())
 		if err != nil {
 			fmt.Printf("error mapping tracks; %s\n", err)
 			os.Exit(1)
 		}
-		//fmt.Printf("session: %s tracks: %v\n", s.Name(), ts)
 		s.SetTracks(ts)
 	}
 
