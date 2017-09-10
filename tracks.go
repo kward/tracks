@@ -10,17 +10,18 @@ import (
 )
 
 const (
-	patchFileFlag = "patch_file"
+	infoFileFlag = "info_file"
 )
 
 var (
+	// TODO(Kate) Add support for copy.
 	behaviors = map[string]bool{"rename": true, "move": true}
 
-	behavior  string
-	dryRun    = flag.Bool("dry_run", false, "Do a dry run.")
-	patchFile = flag.String(patchFileFlag, "", "Venue patch file.")
-	srcDir    = flag.String("src_dir", ".", "Source directory.")
-	destDir   = flag.String("dest_dir", "", "Destination directory. Leave empty to rename in place.")
+	behavior string
+	dryRun   = flag.Bool("dry_run", false, "Do a dry run.")
+	infoFile = flag.String(infoFileFlag, "", "Venue info file.")
+	srcDir   = flag.String("src_dir", ".", "Source directory.")
+	destDir  = flag.String("dest_dir", "", "Destination directory. Leave empty to rename in place.")
 )
 
 func init() {
@@ -39,17 +40,17 @@ func init() {
 	if *destDir == "" {
 		*destDir = *srcDir
 	}
-	if *patchFile == "" {
-		fmt.Printf("empty %s flag\n", patchFileFlag)
+	if *infoFile == "" {
+		fmt.Printf("empty %s flag\n", infoFileFlag)
 		os.Exit(1)
 	}
 }
 
 func main() {
 	// Read Venue file.
-	data, err := ioutil.ReadFile(*patchFile)
+	data, err := ioutil.ReadFile(*infoFile)
 	if err != nil {
-		fmt.Printf("error reading venue patch file %q; %s\n", *patchFile, err)
+		fmt.Printf("error reading Venue info file; %s\n", *infoFile, err)
 		os.Exit(1)
 	}
 	v := venue.NewVenue()

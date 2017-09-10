@@ -61,25 +61,24 @@ func filterTracks(names []string) []string {
 	return filtered
 }
 
-func mapTrackToChannel(t *Track, sbs StageBoxes) (*StageBox, *Channel, error) {
+func mapTrackToChannel(t *Track, devs Devices) (*Device, *Channel, error) {
 	// Walk the stage boxes in order, counting channels as we go.
-	chOffset := 0
+	offset := 0
 
-	for _, i := range stageBoxList {
-		sbName := fmt.Sprintf("Stage %s", i)
+	for _, name := range []string{"Stage 1", "Stage 2", "Stage 3", "Stage 4"} {
 		// Check that stage box was configured.
-		sb, ok := sbs[sbName]
+		sb, ok := devs[name]
 		if !ok {
 			continue
 		}
 		// Check whether track is on this stage box.
-		if t.num > chOffset+len(sb.inputs) {
-			chOffset += len(sb.inputs)
+		if t.num > offset+len(sb.inputs) {
+			offset += len(sb.inputs)
 			continue
 		}
 		// Found it.
-		chNum := t.num - chOffset
-		return sb, sb.inputs[chNum], nil
+		moniker := fmt.Sprintf("%d", t.num-offset)
+		return sb, sb.inputs[moniker], nil
 	}
 	return nil, nil, fmt.Errorf("channel not found")
 }
