@@ -16,7 +16,7 @@ software.
 [![Travis CI](https://travis-ci.org/kward/tracks.png?branch=master)](https://travis-ci.org/kward/tracks)
 
 ## Usage
-Perform a test run of renaming all tracks in the `~/tmp/audiofiles` directory using the `.
+Perform a test run of renaming all tracks in the `~/tmp/audiofiles` directory.
 
 ```sh
 go run tracks.go \
