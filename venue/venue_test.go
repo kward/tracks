@@ -34,6 +34,26 @@ func init() {
 			console: "Avid VENUE",
 			version: "VENUE 4.5.3",
 			show:    "ICF Zurich\\20170906 Ladies Night"},
+		&TestData{
+			name:    "20170910 Avid D-Show Patch List.html",
+			console: "Avid VENUE",
+			version: "D-Show 3.1.1",
+			show:    "GenX\\2017_09_10PM"},
+		&TestData{
+			name:    "20170910 Avid D-Show System Info.html",
+			console: "Avid VENUE",
+			version: "D-Show 3.1.1",
+			show:    "GenX\\2017_09_10PM"},
+		&TestData{
+			name:    "20170910 Avid S3L-X Patch List.html",
+			console: "Avid VENUE",
+			version: "VENUE 4.5.3",
+			show:    "01 ICF ZH Celebrations\\2017-09-10 Rec PM"},
+		&TestData{
+			name:    "20170910 Avid S3L-X System Info.html",
+			console: "Avid VENUE",
+			version: "VENUE 4.5.3",
+			show:    "01 ICF ZH Celebrations\\2017-09-10 Rec PM"},
 	}
 
 	for _, td := range testdata {

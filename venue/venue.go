@@ -287,7 +287,7 @@ var xpaths = map[string]XPath{
 	"version": XPath{
 		xpath: `//meta[@name='author']/@content`},
 	"show": XPath{
-		xpath: `//table//td[contains(span,'Show')]/../td[2]`},
+		xpath: `//table//td[contains(span,'Show:')]/../td[2]`},
 	"stageBoxInputs": XPath{
 		xpath: `//table//tr[contains(td/span,'Stage') and contains(td/span,'Inputs')]`},
 	"stageBoxOutputs": XPath{
