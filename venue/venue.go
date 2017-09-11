@@ -39,6 +39,7 @@ func NewVenue() *Venue {
 	}
 }
 
+// String implements the fmt.Stringer interface.
 func (v *Venue) String() string {
 	s := fmt.Sprintf("{console: %s version: %s show: %s devices:{",
 		v.console, v.version, v.show)
@@ -47,6 +48,11 @@ func (v *Venue) String() string {
 	}
 	s += "}"
 	return s
+}
+
+// Devices returns the known devices.
+func (v *Venue) Devices() Devices {
+	return v.devices
 }
 
 // Parse a Venue patch file.
@@ -96,18 +102,6 @@ func (v *Venue) parseMetadata(root *xmlpath.Node) error {
 	}
 
 	return nil
-}
-
-// NameTracks based on their channel name.
-func (v *Venue) NameTracks(ts Tracks) (Tracks, error) {
-	for i, t := range ts {
-		_, ch, err := mapTrackToChannel(t, v.devices)
-		if err != nil {
-			return nil, fmt.Errorf("error mapping track to channel; %s", err)
-		}
-		ts[i].name = ch.name
-	}
-	return ts, nil
 }
 
 // discoverStageBoxes parses the XML for stage box references.
@@ -187,14 +181,35 @@ func discover(node *xmlpath.Node, title string) (string, Channels, error) {
 //-----------------------------------------------------------------------------
 // Device
 
+// Devices is a map of devices.
+type Devices map[string]*Device
+
+// Device describes a Venue IO device.
 type Device struct {
 	typ             hardware.Hardware
 	name            string
 	inputs, outputs Channels
 }
 
-type Devices map[string]*Device
+func NewDevice(typ hardware.Hardware, name string, inputs, outputs Channels) *Device {
+	return &Device{
+		typ:     typ,
+		name:    name,
+		inputs:  inputs,
+		outputs: outputs,
+	}
+}
 
+// Input returns the named input channel.
+func (d *Device) Input(ch string) *Channel { return d.inputs[ch] }
+
+// Name returns the device name.
+func (d *Device) Name() string { return d.name }
+
+// NumInputs returns the number of input channels.
+func (d *Device) NumInputs() int { return len(d.inputs) }
+
+// String implements the fmt.Stringer interface.
 func (d *Device) String() string {
 	s := fmt.Sprintf("{name: %s inputs:{", d.name)
 	for _, ch := range d.inputs {
@@ -211,10 +226,21 @@ func (d *Device) String() string {
 //-----------------------------------------------------------------------------
 // Channel
 
+// Channels is a map of channels.
 type Channels map[string]*Channel
+
+// Channel describes a device channel.
 type Channel struct {
 	moniker string // The channel number (e.g. "1") or IO name (e.g. "FWx 1").
 	name    string
+}
+
+// NewChannel returns an instantiated Channel.
+func NewChannel(moniker, name string) *Channel {
+	return &Channel{
+		moniker: moniker,
+		name:    name,
+	}
 }
 
 // Equal returns true if the channels are equal.
@@ -225,7 +251,10 @@ func (c *Channel) Equal(c2 *Channel) bool {
 	return c.name == c2.name
 }
 
-// String provides human readable output.
+// Name returns the channel name.
+func (c *Channel) Name() string { return c.name }
+
+// String implements the fmt.Stringer interface.
 func (c *Channel) String() string {
 	s := fmt.Sprintf("{moniker: %d", c.moniker)
 	if c.name != "" {

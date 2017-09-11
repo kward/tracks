@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/kward/tracks/tracks"
 	"github.com/kward/tracks/venue"
 )
 
@@ -32,7 +33,9 @@ func init() {
 	flag.StringVar(&behavior, "behavior", "rename", fmt.Sprintf("Behavior; one of %s", bs))
 
 	flag.Parse()
+}
 
+func flags() {
 	if _, ok := behaviors[behavior]; !ok {
 		fmt.Printf("unrecognized behavior %s\n", behavior)
 		os.Exit(1)
@@ -47,6 +50,8 @@ func init() {
 }
 
 func main() {
+	flags()
+
 	// Read Venue file.
 	data, err := ioutil.ReadFile(*infoFile)
 	if err != nil {
@@ -60,7 +65,7 @@ func main() {
 	}
 
 	// Discover sessions and tracks.
-	sessions := venue.NewSessions()
+	sessions := tracks.NewSessions()
 	if err := sessions.Discover(*srcDir); err != nil {
 		fmt.Printf("error discovering sessions; %s\n", err)
 		os.Exit(1)
@@ -68,7 +73,7 @@ func main() {
 
 	// Map tracks to stage boxes.
 	for _, s := range sessions {
-		ts, err := v.NameTracks(s.Tracks())
+		ts, err := NameTracks(s.Tracks(), v.Devices())
 		if err != nil {
 			fmt.Printf("error mapping tracks; %s\n", err)
 			os.Exit(1)
@@ -105,4 +110,38 @@ func main() {
 			os.Exit(1)
 		}
 	}
+}
+
+// NameTracks based on their channel name.
+func NameTracks(ts tracks.Tracks, ds venue.Devices) (tracks.Tracks, error) {
+	for i, t := range ts {
+		_, ch, err := mapTrackToChannel(t, ds)
+		if err != nil {
+			return nil, fmt.Errorf("error mapping track to channel; %s", err)
+		}
+		ts[i].SetName(ch.Name())
+	}
+	return ts, nil
+}
+
+func mapTrackToChannel(t *tracks.Track, devs venue.Devices) (*venue.Device, *venue.Channel, error) {
+	// Walk the stage boxes in order, counting channels as we go.
+	offset := 0
+
+	for _, name := range []string{"Stage 1", "Stage 2", "Stage 3", "Stage 4"} {
+		// Check that stage box was configured.
+		sb, ok := devs[name]
+		if !ok {
+			continue
+		}
+		// Check whether track is on this stage box.
+		if t.Num() > offset+sb.NumInputs() {
+			offset += sb.NumInputs()
+			continue
+		}
+		// Found it.
+		moniker := fmt.Sprintf("%d", t.Num()-offset)
+		return sb, sb.Input(moniker), nil
+	}
+	return nil, nil, fmt.Errorf("channel not found")
 }

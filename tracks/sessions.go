@@ -1,4 +1,4 @@
-package venue
+package tracks
 
 import (
 	"fmt"
@@ -102,7 +102,7 @@ type Session struct {
 func NewSession(num int) *Session {
 	return &Session{
 		num:    num,
-		tracks: NewTracks(),
+		tracks: make(Tracks),
 	}
 }
 

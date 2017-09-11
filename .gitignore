@@ -1,6 +1,3 @@
-# The tracks binary should never be checked in.
-tracks
-
 # Binaries for programs and plugins
 *.exe
 *.dll
