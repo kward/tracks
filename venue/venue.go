@@ -121,14 +121,20 @@ func NewDevice(typ hardware.Hardware, name string, inputs, outputs Channels) *De
 	}
 }
 
-// Input returns the named input channel.
-func (d *Device) Input(ch string) *Channel { return d.inputs[ch] }
-
 // Name returns the device name.
 func (d *Device) Name() string { return d.name }
 
+// Input returns a copy of the named input channel.
+func (d *Device) Input(ch string) *Channel { return d.inputs[ch] }
+
 // NumInputs returns the number of input channels.
 func (d *Device) NumInputs() int { return len(d.inputs) }
+
+// Output returns a copy of the named output channel.
+func (d *Device) Output(ch string) *Channel { return d.outputs[ch] }
+
+// NumOutputs returns the number of output channels.
+func (d *Device) NumOutputs() int { return len(d.outputs) }
 
 // String implements the fmt.Stringer interface.
 func (d *Device) String() string {
