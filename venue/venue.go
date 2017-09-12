@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/kward/tracks/venue/hardware"
+	"google.golang.org/grpc/codes"
 
 	xmlpath "gopkg.in/xmlpath.v2"
 )
@@ -17,8 +18,10 @@ import (
 func init() {
 	for k, v := range xpaths {
 		v.name = k
-		v.path = xmlpath.MustCompile(v.xpath)
-		xpaths[k] = v
+		if !v.dynamic { // Only compile the non-dynamic paths.
+			v.path = xmlpath.MustCompile(v.xpath)
+			xpaths[k] = v
+		}
 	}
 }
 
@@ -65,19 +68,11 @@ func (v *Venue) Parse(data []byte) error {
 		return err
 	}
 
-	sbs, err := discoverStageBoxes(root)
+	devs, err := discoverDevices(root)
 	if err != nil {
 		return err
 	}
-	for k, sb := range sbs {
-		v.devices[k] = sb
-	}
-
-	pt, err := discoverProTools(root)
-	if err != nil {
-		return err
-	}
-	v.devices[pt.name] = pt
+	v.devices = devs
 
 	return nil
 }
@@ -102,80 +97,6 @@ func (v *Venue) parseMetadata(root *xmlpath.Node) error {
 	}
 
 	return nil
-}
-
-// discoverStageBoxes parses the XML for stage box references.
-func discoverStageBoxes(root *xmlpath.Node) (Devices, error) {
-	devs := make(Devices)
-
-	// Find stage box inputs. The stage box name is derived based on what is
-	// discovered here.
-	iter := xpaths["stageBoxInputs"].path.Iter(root)
-	for iter.Next() {
-		name, chs, err := discover(iter.Node(), "Inputs")
-		if err != nil {
-			return nil, fmt.Errorf("error probing stage box inputs; %s", err)
-		}
-		devs[name] = &Device{
-			typ:    hardware.StageBox,
-			name:   name,
-			inputs: chs,
-		}
-	}
-
-	iter = xpaths["stageBoxOutputs"].path.Iter(root)
-	for iter.Next() {
-		name, chs, err := discover(iter.Node(), "Outputs")
-		if err != nil {
-			return nil, fmt.Errorf("error probing stage box outputs; %s", err)
-		}
-		if devs[name] == nil {
-			return nil, fmt.Errorf("found outputs without corresponding inputs for %s", name)
-		}
-		devs[name].outputs = chs
-	}
-
-	return devs, nil
-}
-
-func discoverProTools(root *xmlpath.Node) (*Device, error) {
-	dev := &Device{
-		typ:  hardware.ProTools,
-		name: "Pro Tools",
-	}
-
-	iter := xpaths["proToolsInputs"].path.Iter(root)
-	if !iter.Next() {
-		return nil, fmt.Errorf("Pro Tools inputs not found")
-	}
-	_, chs, err := discover(iter.Node(), "Inputs")
-	if err != nil {
-		return nil, err
-	}
-	dev.inputs = chs
-
-	iter = xpaths["proToolsOutputs"].path.Iter(root)
-	if !iter.Next() {
-		return nil, fmt.Errorf("Pro Tools outputs not found")
-	}
-	_, chs, err = discover(iter.Node(), "Outputs")
-	if err != nil {
-		return nil, err
-	}
-	dev.outputs = chs
-
-	return dev, nil
-}
-
-func discover(node *xmlpath.Node, title string) (string, Channels, error) {
-	name := trim(node.String())
-	name = strings.TrimSuffix(name, " "+title)
-
-	chs, err := probeChannels(node)
-	if err != nil {
-		return "", nil, fmt.Errorf("error probing for %s; %s", title, err)
-	}
-	return name, chs, nil
 }
 
 //-----------------------------------------------------------------------------
@@ -221,6 +142,66 @@ func (d *Device) String() string {
 	}
 	s += "}"
 	return s
+}
+
+func discoverDevices(root *xmlpath.Node) (Devices, error) {
+	devs := make(Devices)
+
+	for _, name := range []string{
+		"Console", "Engine", "Local", "Pro Tools", "Stage 1", "Stage 2", "Stage 3", "Stage 4",
+	} {
+		dev, err := discoverDevice(root, name)
+		switch Code(err) {
+		case codes.OK: // Do nothing.
+		case codes.NotFound:
+			continue
+		default:
+			return nil, err
+		}
+		devs[name] = dev
+	}
+
+	return devs, nil
+}
+
+func discoverDevice(root *xmlpath.Node, name string) (*Device, error) {
+	dev := &Device{
+		typ:  hardware.ProTools,
+		name: name,
+	}
+
+	iter := xmlpath.MustCompile(fmt.Sprintf(xpaths["devices"].xpath, name, "Inputs")).Iter(root)
+	if !iter.Next() {
+		return nil, Errorf(codes.NotFound, "%s inputs not found", name)
+	}
+	_, chs, err := probeDevice(iter.Node(), "Inputs")
+	if err != nil {
+		return nil, err
+	}
+	dev.inputs = chs
+
+	iter = xmlpath.MustCompile(fmt.Sprintf(xpaths["devices"].xpath, name, "Outputs")).Iter(root)
+	if !iter.Next() {
+		return nil, Errorf(codes.NotFound, "%s outputs not found", name)
+	}
+	_, chs, err = probeDevice(iter.Node(), "Outputs")
+	if err != nil {
+		return nil, err
+	}
+	dev.outputs = chs
+
+	return dev, nil
+}
+
+func probeDevice(node *xmlpath.Node, title string) (string, Channels, error) {
+	name := trim(node.String())
+	name = strings.TrimSuffix(name, " "+title)
+
+	chs, err := probeChannels(node)
+	if err != nil {
+		return "", nil, Errorf(codes.Internal, "error probing for %s; %s", title, err)
+	}
+	return name, chs, nil
 }
 
 //-----------------------------------------------------------------------------
@@ -305,30 +286,77 @@ func probeChannels(root *xmlpath.Node) (Channels, error) {
 // XPath
 
 type XPath struct {
-	name  string
-	xpath string
-	path  *xmlpath.Path
+	name    string
+	xpath   string
+	path    *xmlpath.Path
+	dynamic bool // Compile dynamically?
 }
 
 var xpaths = map[string]XPath{
+	// Static paths.
 	"console": XPath{
 		xpath: `//meta[@name='description']/@content`},
 	"version": XPath{
 		xpath: `//meta[@name='author']/@content`},
 	"show": XPath{
 		xpath: `//table//td[contains(span,'Show:')]/../td[2]`},
-	"stageBoxInputs": XPath{
-		xpath: `//table//tr[contains(td/span,'Stage') and contains(td/span,'Inputs')]`},
-	"stageBoxOutputs": XPath{
-		xpath: `//table//tr[contains(td/span,'Stage') and contains(td/span,'Outputs')]`},
 	"channel": XPath{
 		xpath: `../tr`},
 	"channelDetail": XPath{
 		xpath: `td`},
-	"proToolsInputs": XPath{
-		xpath: `//table//tr[contains(td/span,'Pro Tools') and contains(td/span,'Inputs')]`},
-	"proToolsOutputs": XPath{
-		xpath: `//table//tr[contains(td/span,'Pro Tools') and contains(td/span,'Outputs')]`},
+	// Dynamic paths.
+	"devices": XPath{
+		xpath:   `//table//tr[contains(td/span,'%s') and contains(td/span,'%s')]`,
+		dynamic: true},
+}
+
+//-----------------------------------------------------------------------------
+// venueError
+
+// venueError defines the status of a Venue call.
+type venueError struct {
+	code codes.Code
+	desc string
+}
+
+func (e *venueError) Error() string {
+	return fmt.Sprintf("venue error: %s: %s", e.code, e.desc)
+}
+
+// Code returns the error code for `err` if it was produced by Venue.
+// Otherwise, it returns codes.Unknown.
+func Code(err error) codes.Code {
+	if err == nil {
+		return codes.OK
+	}
+	if e, ok := err.(*venueError); ok {
+		return e.code
+	}
+	return codes.Unknown
+}
+
+// ErrorDesc returns the error description of `err` if it was produced by Venue.
+// Otherwise, it returns err.Error(), or an empty string when `err` is nil.
+func ErrorDesc(err error) string {
+	if err == nil {
+		return ""
+	}
+	if e, ok := err.(*venueError); ok {
+		return e.desc
+	}
+	return err.Error()
+}
+
+// Errorf returns an error containing an error code and a description.
+// Errorf returns nil if `c` is OK.
+func Errorf(c codes.Code, format string, a ...interface{}) error {
+	if c == codes.OK {
+		return nil
+	}
+	return &venueError{
+		code: c,
+		desc: fmt.Sprintf(format, a...),
+	}
 }
 
 //-----------------------------------------------------------------------------

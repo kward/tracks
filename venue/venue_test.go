@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"reflect"
+	"sort"
 	"testing"
 
 	xmlpath "gopkg.in/xmlpath.v2"
@@ -13,11 +15,12 @@ import (
 const testdataPath = "testdata"
 
 type TestData struct {
-	name    string
-	root    *xmlpath.Node
-	console string
-	version string
-	show    string
+	name     string
+	root     *xmlpath.Node
+	console  string
+	version  string
+	show     string
+	devNames []string
 }
 
 var testdata []*TestData
@@ -25,35 +28,41 @@ var testdata []*TestData
 func init() {
 	testdata = []*TestData{
 		&TestData{
-			name:    "20170526 ICF Conference Worship Night.html",
-			console: "Avid VENUE",
-			version: "VENUE 4.5.3",
-			show:    "ICF Zurich\\20170526 Conf WN"},
+			name:     "20170526 ICF Conference Worship Night.html",
+			console:  "Avid VENUE",
+			version:  "VENUE 4.5.3",
+			show:     "ICF Zurich\\20170526 Conf WN",
+			devNames: []string{"Console", "Engine", "Pro Tools", "Stage 1", "Stage 2", "Stage 3", "Stage 4"}},
 		&TestData{
-			name:    "20170906 ICF Ladies Night.html",
-			console: "Avid VENUE",
-			version: "VENUE 4.5.3",
-			show:    "ICF Zurich\\20170906 Ladies Night"},
+			name:     "20170906 ICF Ladies Night.html",
+			console:  "Avid VENUE",
+			version:  "VENUE 4.5.3",
+			show:     "ICF Zurich\\20170906 Ladies Night",
+			devNames: []string{"Local", "Pro Tools", "Stage 1"}},
 		&TestData{
-			name:    "20170910 Avid D-Show Patch List.html",
-			console: "Avid VENUE",
-			version: "D-Show 3.1.1",
-			show:    "GenX\\2017_09_10PM"},
+			name:     "20170910 Avid D-Show Patch List.html",
+			console:  "Avid VENUE",
+			version:  "D-Show 3.1.1",
+			show:     "GenX\\2017_09_10PM",
+			devNames: []string{"Pro Tools", "Stage 1"}},
 		&TestData{
-			name:    "20170910 Avid D-Show System Info.html",
-			console: "Avid VENUE",
-			version: "D-Show 3.1.1",
-			show:    "GenX\\2017_09_10PM"},
+			name:     "20170910 Avid D-Show System Info.html",
+			console:  "Avid VENUE",
+			version:  "D-Show 3.1.1",
+			show:     "GenX\\2017_09_10PM",
+			devNames: []string{"Pro Tools", "Stage 1"}},
 		&TestData{
-			name:    "20170910 Avid S3L-X Patch List.html",
-			console: "Avid VENUE",
-			version: "VENUE 4.5.3",
-			show:    "01 ICF ZH Celebrations\\2017-09-10 Rec PM"},
+			name:     "20170910 Avid S3L-X Patch List.html",
+			console:  "Avid VENUE",
+			version:  "VENUE 4.5.3",
+			show:     "01 ICF ZH Celebrations\\2017-09-10 Rec PM",
+			devNames: []string{"Console", "Engine", "Pro Tools", "Stage 1", "Stage 2", "Stage 3", "Stage 4"}},
 		&TestData{
-			name:    "20170910 Avid S3L-X System Info.html",
-			console: "Avid VENUE",
-			version: "VENUE 4.5.3",
-			show:    "01 ICF ZH Celebrations\\2017-09-10 Rec PM"},
+			name:     "20170910 Avid S3L-X System Info.html",
+			console:  "Avid VENUE",
+			version:  "VENUE 4.5.3",
+			show:     "01 ICF ZH Celebrations\\2017-09-10 Rec PM",
+			devNames: []string{"Console", "Engine", "Pro Tools", "Stage 1", "Stage 2", "Stage 3", "Stage 4"}},
 	}
 
 	for _, td := range testdata {
@@ -94,3 +103,20 @@ func TestParseMetadata(t *testing.T) {
 // TODO(Kate): Validate that channels are probed properly.
 // func TestProbeChannels(t *testing.T) {
 // }
+
+func TestDiscoverDevices(t *testing.T) {
+	for _, td := range testdata {
+		devs, err := discoverDevices(td.root)
+		if err != nil {
+			t.Fatalf("discoverDevices(): unexpected error; %s", err)
+		}
+		devNames := []string{}
+		for k, _ := range devs {
+			devNames = append(devNames, k)
+		}
+		sort.Slice(devNames, func(i, j int) bool { return devNames[i] < devNames[j] })
+		if got, want := devNames, td.devNames; !reflect.DeepEqual(got, want) {
+			t.Errorf("%s: discoverDevices(): device names = %q, want %q", td.name, got, want)
+		}
+	}
+}
