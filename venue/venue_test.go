@@ -116,10 +116,6 @@ func TestParseMetadata(t *testing.T) {
 	}
 }
 
-// TODO(Kate): Validate that channels are probed properly.
-// func TestProbeChannels(t *testing.T) {
-// }
-
 func TestDiscoverDevices(t *testing.T) {
 	for _, td := range testdata {
 		devs, err := discoverDevices(td.root)
