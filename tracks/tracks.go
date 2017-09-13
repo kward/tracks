@@ -11,10 +11,10 @@ type Tracks map[int]*Track
 
 // Track holds metadata about a track.
 type Track struct {
-	name              string
-	origName, newName string
-	num               int
-	sessionNum        int
+	name               string
+	origName, destName string
+	num                int
+	sessionNum         int
 }
 
 // NewTrack returns an instantiated Track object.
@@ -47,8 +47,8 @@ func (t *Track) SetName(name string) { t.name = name }
 
 func (t *Track) OrigName() string { return t.origName }
 
-func (t *Track) NewName() string        { return t.newName }
-func (t *Track) SetNewName(name string) { t.newName = name }
+func (t *Track) DestName() string        { return t.destName }
+func (t *Track) SetDestName(name string) { t.destName = name }
 
 func (t *Track) Num() int { return t.num }
 

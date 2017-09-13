@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	kioutil "github.com/kward/golib/io/ioutil"
 	"github.com/kward/tracks/tracks"
 	"github.com/kward/tracks/venue"
 )
@@ -16,7 +17,11 @@ const (
 
 var (
 	// TODO(Kate) Add support for copy.
-	behaviors = map[string]bool{"rename": true, "move": true}
+	behaviors = map[string]bool{
+		"copy": true, "cp": true,
+		"move": true, "mv": true,
+		"rename": true,
+	}
 
 	behavior string
 	dryRun   = flag.Bool("dry_run", false, "Do a dry run.")
@@ -30,7 +35,7 @@ func init() {
 	for b := range behaviors {
 		bs = append(bs, b)
 	}
-	flag.StringVar(&behavior, "behavior", "rename", fmt.Sprintf("Behavior; one of %s", bs))
+	flag.StringVar(&behavior, "behavior", "move", fmt.Sprintf("Behavior; one of %s", bs))
 
 	flag.Parse()
 }
@@ -40,6 +45,13 @@ func flags() {
 		fmt.Printf("unrecognized behavior %s\n", behavior)
 		os.Exit(1)
 	}
+	switch behavior {
+	case "cp":
+		behavior = "copy"
+	case "mv":
+		behavior = "move"
+	}
+
 	if *destDir == "" {
 		*destDir = *srcDir
 	}
@@ -47,6 +59,10 @@ func flags() {
 		fmt.Printf("empty %s flag\n", infoFileFlag)
 		os.Exit(1)
 	}
+}
+
+type Names struct {
+	orig, dest string
 }
 
 func main() {
@@ -82,32 +98,47 @@ func main() {
 	}
 
 	// Map tracks to new names.
-	type rename struct{ oldName, newName string }
-	names := []rename{}
+	names := []Names{}
 	for _, s := range sessions {
 		for _, t := range s.Tracks().Slice() {
 			name := t.Name()
 			if name == "" {
 				name = fmt.Sprintf("Track %02d", t.Num())
 			}
-			newName := fmt.Sprintf("%02d-%02d %s.wav", s.Num(), t.Num(), name)
-			t.SetNewName(newName)
-			names = append(names, rename{t.OrigName(), t.NewName()})
+			dest := fmt.Sprintf("%02d-%02d %s.wav", s.Num(), t.Num(), name)
+			t.SetDestName(dest)
+			names = append(names, Names{t.OrigName(), t.DestName()})
 		}
 	}
 
-	// Do renames.
-	fmt.Println("Renaming:")
+	// Do work.
+	switch behavior {
+	case "copy":
+		fmt.Println("Copying:")
+	case "move":
+		fmt.Println("Moving:")
+	case "rename":
+		fmt.Println("Renaming (moving):")
+	}
+
 	for _, name := range names {
-		oldPath := fmt.Sprintf("%s/%s", *srcDir, name.oldName)
-		newPath := fmt.Sprintf("%s/%s", *destDir, name.newName)
-		fmt.Printf("  %s --> %s\n", oldPath, newPath)
+		origPath := fmt.Sprintf("%s/%s", *srcDir, name.orig)
+		destPath := fmt.Sprintf("%s/%s", *destDir, name.dest)
+		fmt.Printf("  %s --> %s\n", origPath, destPath)
 		if *dryRun {
 			continue
 		}
-		if err := os.Rename(oldPath, newPath); err != nil {
-			fmt.Printf("error renaming %s to %s; %s", oldPath, newPath, err)
-			os.Exit(1)
+		switch behavior {
+		case "copy":
+			if _, err := kioutil.CopyFile(destPath, origPath); err != nil {
+				fmt.Printf("error copying file; %s", err)
+				os.Exit(1)
+			}
+		case "move", "rename":
+			if err := os.Rename(origPath, destPath); err != nil {
+				fmt.Printf("error moving file; %s", err)
+				os.Exit(1)
+			}
 		}
 	}
 }
