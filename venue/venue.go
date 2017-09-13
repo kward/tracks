@@ -28,6 +28,7 @@ func init() {
 //-----------------------------------------------------------------------------
 // Venue
 
+// Venue describes an Avid Venue device as found in an exported patch list.
 type Venue struct {
 	console string
 	version string
@@ -36,6 +37,7 @@ type Venue struct {
 	devices Devices
 }
 
+// NewVenue returns a pointer to an instantiated Venue struct.
 func NewVenue() *Venue {
 	return &Venue{
 		devices: make(Devices),
@@ -112,6 +114,7 @@ type Device struct {
 	inputs, outputs Channels
 }
 
+// NewDevice returns a pointer to an instantiated Device struct.
 func NewDevice(typ hardware.Hardware, name string, inputs, outputs Channels) *Device {
 	return &Device{
 		typ:     typ,
@@ -150,6 +153,7 @@ func (d *Device) String() string {
 	return s
 }
 
+// discoverDevices walks the XML, looking for known Venue devices.
 func discoverDevices(root *xmlpath.Node) (Devices, error) {
 	devs := make(Devices)
 
@@ -170,6 +174,7 @@ func discoverDevices(root *xmlpath.Node) (Devices, error) {
 	return devs, nil
 }
 
+// discoverDevice walks the XML, looking for specific device inputs and outputs.
 func discoverDevice(root *xmlpath.Node, name string) (*Device, error) {
 	dev := &Device{
 		typ:  hardware.ProTools,
@@ -199,6 +204,7 @@ func discoverDevice(root *xmlpath.Node, name string) (*Device, error) {
 	return dev, nil
 }
 
+// probeDevice walks the XML, probing a device for info.
 func probeDevice(node *xmlpath.Node, title string) (string, Channels, error) {
 	name := trim(node.String())
 	name = strings.TrimSuffix(name, " "+title)
@@ -251,6 +257,7 @@ func (c *Channel) String() string {
 	return s
 }
 
+// probeChannels walks XML, looking for channel info.
 func probeChannels(root *xmlpath.Node) (Channels, error) {
 	chs := Channels{}
 
@@ -291,6 +298,7 @@ func probeChannels(root *xmlpath.Node) (Channels, error) {
 //-----------------------------------------------------------------------------
 // XPath
 
+// XPath describes an xpath, and holds a compiled version.
 type XPath struct {
 	name    string
 	xpath   string
@@ -325,6 +333,7 @@ type venueError struct {
 	desc string
 }
 
+// Error implements the builtin error interface.
 func (e *venueError) Error() string {
 	return fmt.Sprintf("venue error: %s: %s", e.code, e.desc)
 }
