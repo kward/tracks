@@ -55,7 +55,7 @@ func main() {
 	// Read Venue file.
 	data, err := ioutil.ReadFile(*infoFile)
 	if err != nil {
-		fmt.Printf("error reading Venue info file; %s\n", *infoFile, err)
+		fmt.Printf("error reading Venue info file; %s\n", err)
 		os.Exit(1)
 	}
 	v := venue.NewVenue()

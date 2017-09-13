@@ -85,7 +85,7 @@ func init() {
 		path := testdataPath + "/" + td.name
 		data, err := ioutil.ReadFile(path)
 		if err != nil {
-			log.Printf("error reading testdata file %r; %s", path, err)
+			log.Printf("error reading testdata file %q; %s", path, err)
 			os.Exit(1)
 		}
 		node, err := xmlpath.ParseHTML(bytes.NewReader(data))

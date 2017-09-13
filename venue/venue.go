@@ -249,7 +249,7 @@ func (c *Channel) Name() string { return c.name }
 
 // String implements the fmt.Stringer interface.
 func (c *Channel) String() string {
-	s := fmt.Sprintf("{moniker: %d", c.moniker)
+	s := fmt.Sprintf("{moniker: %s", c.moniker)
 	if c.name != "" {
 		s += fmt.Sprintf(" name: %s", c.name)
 	}
