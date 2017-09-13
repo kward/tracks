@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/kward/golib/errors"
 	"github.com/kward/tracks/venue/hardware"
 	"google.golang.org/grpc/codes"
-
 	xmlpath "gopkg.in/xmlpath.v2"
 )
 
@@ -161,7 +161,7 @@ func discoverDevices(root *xmlpath.Node) (Devices, error) {
 		"Console", "Engine", "Local", "Pro Tools", "Stage 1", "Stage 2", "Stage 3", "Stage 4",
 	} {
 		dev, err := discoverDevice(root, name)
-		switch Code(err) {
+		switch errors.Code(err) {
 		case codes.OK: // Do nothing.
 		case codes.NotFound:
 			continue
@@ -183,7 +183,7 @@ func discoverDevice(root *xmlpath.Node, name string) (*Device, error) {
 
 	iter := xmlpath.MustCompile(fmt.Sprintf(xpaths["devices"].xpath, name, "Inputs")).Iter(root)
 	if !iter.Next() {
-		return nil, Errorf(codes.NotFound, "%s inputs not found", name)
+		return nil, errors.Errorf(codes.NotFound, "%s inputs not found", name)
 	}
 	_, chs, err := probeDevice(iter.Node(), "Inputs")
 	if err != nil {
@@ -193,7 +193,7 @@ func discoverDevice(root *xmlpath.Node, name string) (*Device, error) {
 
 	iter = xmlpath.MustCompile(fmt.Sprintf(xpaths["devices"].xpath, name, "Outputs")).Iter(root)
 	if !iter.Next() {
-		return nil, Errorf(codes.NotFound, "%s outputs not found", name)
+		return nil, errors.Errorf(codes.NotFound, "%s outputs not found", name)
 	}
 	_, chs, err = probeDevice(iter.Node(), "Outputs")
 	if err != nil {
@@ -211,7 +211,7 @@ func probeDevice(node *xmlpath.Node, title string) (string, Channels, error) {
 
 	chs, err := probeChannels(node)
 	if err != nil {
-		return "", nil, Errorf(codes.Internal, "error probing for %s; %s", title, err)
+		return "", nil, errors.Errorf(codes.Internal, "error probing for %s; %s", title, err)
 	}
 	return name, chs, nil
 }
@@ -322,56 +322,6 @@ var xpaths = map[string]XPath{
 	"devices": XPath{
 		xpath:   `//table//tr[contains(td/span,'%s') and contains(td/span,'%s')]`,
 		dynamic: true},
-}
-
-//-----------------------------------------------------------------------------
-// venueError
-
-// venueError defines the status of a Venue call.
-type venueError struct {
-	code codes.Code
-	desc string
-}
-
-// Error implements the builtin error interface.
-func (e *venueError) Error() string {
-	return fmt.Sprintf("venue error: %s: %s", e.code, e.desc)
-}
-
-// Code returns the error code for `err` if it was produced by Venue.
-// Otherwise, it returns codes.Unknown.
-func Code(err error) codes.Code {
-	if err == nil {
-		return codes.OK
-	}
-	if e, ok := err.(*venueError); ok {
-		return e.code
-	}
-	return codes.Unknown
-}
-
-// ErrorDesc returns the error description of `err` if it was produced by Venue.
-// Otherwise, it returns err.Error(), or an empty string when `err` is nil.
-func ErrorDesc(err error) string {
-	if err == nil {
-		return ""
-	}
-	if e, ok := err.(*venueError); ok {
-		return e.desc
-	}
-	return err.Error()
-}
-
-// Errorf returns an error containing an error code and a description.
-// Errorf returns nil if `c` is OK.
-func Errorf(c codes.Code, format string, a ...interface{}) error {
-	if c == codes.OK {
-		return nil
-	}
-	return &venueError{
-		code: c,
-		desc: fmt.Sprintf(format, a...),
-	}
 }
 
 //-----------------------------------------------------------------------------
