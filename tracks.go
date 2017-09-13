@@ -124,7 +124,7 @@ func main() {
 	for _, name := range names {
 		origPath := fmt.Sprintf("%s/%s", *srcDir, name.orig)
 		destPath := fmt.Sprintf("%s/%s", *destDir, name.dest)
-		fmt.Printf("  %s --> %s\n", origPath, destPath)
+		fmt.Printf("  %q --> %q\n", origPath, destPath)
 		if *dryRun {
 			continue
 		}
