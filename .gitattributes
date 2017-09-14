@@ -1,0 +1,4 @@
+# Ignore testsdata for GitHub language detection.
+# https://help.github.com/articles/about-repository-languages/
+# https://stackoverflow.com/questions/34713765/github-changes-repository-to-wrong-language/34715182#34715182
+venue/testdata/* linguist-vendored
