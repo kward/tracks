@@ -19,6 +19,7 @@ var (
 	// TODO(Kate) Add support for copy.
 	behaviors = map[string]bool{
 		"copy": true, "cp": true,
+		"link": true, "ln": true,
 		"move": true, "mv": true,
 		"rename": true,
 	}
@@ -48,6 +49,8 @@ func flags() {
 	switch behavior {
 	case "cp":
 		behavior = "copy"
+	case "ln":
+		behavior = "link"
 	case "mv":
 		behavior = "move"
 	}
@@ -115,6 +118,8 @@ func main() {
 	switch behavior {
 	case "copy":
 		fmt.Println("Copying:")
+	case "link":
+		fmt.Println("Linking:")
 	case "move":
 		fmt.Println("Moving:")
 	case "rename":
@@ -132,6 +137,11 @@ func main() {
 		case "copy":
 			if _, err := kioutil.CopyFile(destPath, origPath); err != nil {
 				fmt.Printf("error copying file; %s", err)
+				os.Exit(1)
+			}
+		case "link":
+			if err := os.Link(origPath, destPath); err != nil {
+				fmt.Println("error linking file; %s", err)
 				os.Exit(1)
 			}
 		case "move", "rename":
