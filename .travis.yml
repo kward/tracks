@@ -6,7 +6,8 @@ go:
 
 install:
   - go get github.com/kward/golib/errors
-  - go get github.com/kward/golib/operators
   - go get github.com/kward/golib/io/ioutil
+  - go get github.com/kward/golib/operators
+  - go get github.com/kward/golib/os
   - go get google.golang.org/grpc/codes
   - go get gopkg.in/xmlpath.v2
