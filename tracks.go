@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	kioutil "github.com/kward/golib/io/ioutil"
 	"github.com/kward/tracks/tracks"
@@ -29,6 +30,8 @@ var (
 	infoFile = flag.String(infoFileFlag, "", "Venue info file.")
 	srcDir   = flag.String("src_dir", ".", "Source directory.")
 	destDir  = flag.String("dest_dir", "", "Destination directory. Leave empty to rename in place.")
+
+	fnReadDir = ioutil.ReadDir
 )
 
 func init() {
@@ -83,10 +86,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Discover sessions and tracks.
-	sessions := tracks.NewSessions()
-	if err := sessions.Discover(*srcDir); err != nil {
-		fmt.Printf("error discovering sessions; %s\n", err)
+	files, err := DiscoverFiles(*srcDir, filterWaves)
+	if err != nil {
+		fmt.Printf("error discovering files; %s\n", err)
+		os.Exit(1)
+	}
+
+	sessions, err := tracks.ExtractSessions(files)
+	if err != nil {
+		fmt.Printf("error extracting sessions; %s\n", err)
 		os.Exit(1)
 	}
 
@@ -106,15 +114,19 @@ func main() {
 		for _, t := range s.Tracks().Slice() {
 			name := t.Name()
 			if name == "" {
-				name = fmt.Sprintf("Track %02d", t.Num())
+				name = fmt.Sprintf("Track %02d", t.TrackNum())
 			}
-			dest := fmt.Sprintf("%02d-%02d %s.wav", s.Num(), t.Num(), name)
-			t.SetDestName(dest)
-			names = append(names, Names{t.OrigName(), t.DestName()})
+			dest := fmt.Sprintf("%02d-%02d %s.wav", s.Num(), t.TrackNum(), name)
+			t.SetDest(dest)
+			names = append(names, Names{t.Src(), t.Dest()})
 		}
 	}
 
 	// Do work.
+	if *dryRun {
+		fmt.Println("Doing a dry run.")
+	}
+
 	switch behavior {
 	case "copy":
 		fmt.Println("Copying:")
@@ -136,21 +148,56 @@ func main() {
 		switch behavior {
 		case "copy":
 			if _, err := kioutil.CopyFile(destPath, origPath); err != nil {
-				fmt.Printf("error copying file; %s", err)
+				fmt.Printf("error copying file; %s\n", err)
 				os.Exit(1)
 			}
 		case "link":
 			if err := os.Link(origPath, destPath); err != nil {
-				fmt.Println("error linking file; %s", err)
+				fmt.Printf("error linking file; %s\n", err)
 				os.Exit(1)
 			}
 		case "move", "rename":
 			if err := os.Rename(origPath, destPath); err != nil {
-				fmt.Printf("error moving file; %s", err)
+				fmt.Printf("error moving file; %s\n", err)
 				os.Exit(1)
 			}
 		}
 	}
+}
+
+// DiscoverFiles looks for track names in a given directory, and returns them
+// as a slice.
+func DiscoverFiles(dir string, filters ...Filter) ([]string, error) {
+	fileInfos, err := fnReadDir(dir)
+	if err != nil {
+		return nil, fmt.Errorf("error discovering files in %q; %s", dir, err)
+	}
+
+	files := []string{}
+	for _, fi := range fileInfos {
+		files = append(files, fi.Name())
+	}
+	for _, filter := range filters {
+		files = filter(files)
+	}
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no files found in %q", dir)
+	}
+
+	return files, nil
+}
+
+// Filter defines a file filter function.
+type Filter func(unfiltered []string) (filtered []string)
+
+func filterWaves(unfiltered []string) []string {
+	filtered := []string{}
+	for _, f := range unfiltered {
+		if strings.HasSuffix(f, ".wav") {
+			filtered = append(filtered, f)
+		}
+	}
+	return filtered
 }
 
 // NameTracks based on their channel name.
@@ -176,12 +223,12 @@ func mapTrackToChannel(t *tracks.Track, devs venue.Devices) (*venue.Device, *ven
 			continue
 		}
 		// Check whether track is on this stage box.
-		if t.Num() > offset+sb.NumInputs() {
+		if t.TrackNum() > offset+sb.NumInputs() {
 			offset += sb.NumInputs()
 			continue
 		}
 		// Found it.
-		moniker := fmt.Sprintf("%d", t.Num()-offset)
+		moniker := fmt.Sprintf("%d", t.TrackNum()-offset)
 		return sb, sb.Input(moniker), nil
 	}
 	return nil, nil, fmt.Errorf("channel not found")
