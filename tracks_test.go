@@ -36,7 +36,7 @@ func TestDiscoverFiles(t *testing.T) {
 			true},
 		{"readdir error", "error", nil, []Filter{filterWaves}, false},
 	} {
-		got, err := DiscoverFiles(tt.dir, tt.filters...)
+		files, err := DiscoverFiles(tt.dir, tt.filters...)
 		if err == nil && !tt.ok {
 			t.Errorf("%s: DiscoverFiles() expected error", tt.desc)
 		}
@@ -46,7 +46,7 @@ func TestDiscoverFiles(t *testing.T) {
 		if !tt.ok {
 			continue
 		}
-		if want := tt.files; !reflect.DeepEqual(got, want) {
+		if got, want := files, tt.files; !reflect.DeepEqual(got, want) {
 			t.Errorf("DiscoverFiles() = %q, want %q", got, want)
 		}
 	}

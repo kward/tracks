@@ -4,7 +4,24 @@ import (
 	"testing"
 )
 
-func TestExtract(t *testing.T) {
+func TestTrackEqual(t *testing.T) {
+	for _, tt := range []struct {
+		desc   string
+		t1, t2 *Track
+		equal  bool
+	}{
+		{"equal", NewTrack("Track", 1, 1), &Track{name: "Track", tnum: 1, snum: 1}, true},
+		{"unequal", NewTrack("Track", 1, 2), &Track{name: "Track", tnum: 100, snum: 2}, false},
+		{"one nil", NewTrack("Track", 1, 3), nil, false},
+		{"both nil", nil, nil, true},
+	} {
+		if got, want := tt.t1.Equal(tt.t2), tt.equal; got != want {
+			t.Errorf("%s: Equal() = %v, want %v", tt.desc, got, want)
+		}
+	}
+}
+
+func TestExtractTrack(t *testing.T) {
 	for _, tt := range []struct {
 		desc  string
 		file  string

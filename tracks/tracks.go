@@ -20,13 +20,30 @@ func init() {
 type Tracks map[int]*Track
 
 // Slice returns the Tracks as a slice.
-func (t Tracks) Slice() []*Track {
+func (ts Tracks) Slice() []*Track {
 	slice := []*Track{}
-	for _, v := range t {
-		slice = append(slice, v)
+	for _, t := range ts {
+		slice = append(slice, t)
 	}
 	sort.Slice(slice, func(i, j int) bool { return slice[i].tnum < slice[j].tnum })
 	return slice
+}
+
+// Equal returns true if the two Tracks are equivalent.
+func (ts Tracks) Equal(ts2 Tracks) bool {
+	if len(ts) != len(ts2) {
+		return false
+	}
+	for tnum, t := range ts {
+		t2, ok := ts2[tnum]
+		if !ok {
+			return false
+		}
+		if !t.Equal(t2) {
+			return false
+		}
+	}
+	return true
 }
 
 // Track holds metadata about a track.
@@ -53,17 +70,18 @@ func (t *Track) Equal(t2 *Track) bool {
 
 // String implements the fmt.Stringer interface.
 func (t *Track) String() string {
-	return fmt.Sprintf("{name: %s tnum: %d snum: %d}",
-		t.name, t.tnum, t.snum)
+	return fmt.Sprintf("{src: %q dest: %q name: %q tnum: %d snum: %d}",
+		t.src, t.dest, t.name, t.tnum, t.snum)
 }
 
-func (t *Track) Name() string        { return t.name }
-func (t *Track) SetName(name string) { t.name = name }
+func (t *Track) Name() string               { return t.name }
+func (t *Track) SetName(name string) *Track { t.name = name; return t }
 
-func (t *Track) Src() string { return t.src }
+func (t *Track) Src() string              { return t.src }
+func (t *Track) SetSrc(src string) *Track { t.src = src; return t }
 
-func (t *Track) Dest() string        { return t.dest }
-func (t *Track) SetDest(dest string) { t.dest = dest }
+func (t *Track) Dest() string               { return t.dest }
+func (t *Track) SetDest(dest string) *Track { t.dest = dest; return t }
 
 func (t *Track) TrackNum() int   { return t.tnum }
 func (t *Track) SessionNum() int { return t.snum }
