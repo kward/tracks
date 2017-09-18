@@ -10,6 +10,7 @@ import (
 	kioutil "github.com/kward/golib/io/ioutil"
 	"github.com/kward/tracks/tracks"
 	"github.com/kward/tracks/venue"
+	"github.com/kward/tracks/venue/hardware"
 )
 
 const (
@@ -216,20 +217,32 @@ func mapTrackToChannel(t *tracks.Track, devs venue.Devices) (*venue.Device, *ven
 	// Walk the stage boxes in order, counting channels as we go.
 	offset := 0
 
-	for _, name := range []string{"Stage 1", "Stage 2", "Stage 3", "Stage 4"} {
+	// Search the devices based on their order in the slice.
+	// Note: the stage boxes must be in sorted order.
+	for _, name := range []string{venue.ProTools, venue.Stage1, venue.Stage2, venue.Stage3, venue.Stage4} {
 		// Check that stage box was configured.
-		sb, ok := devs[name]
+		dev, ok := devs[name]
 		if !ok {
 			continue
 		}
-		// Check whether track is on this stage box.
-		if t.TrackNum() > offset+sb.NumInputs() {
-			offset += sb.NumInputs()
-			continue
+		switch dev.Type() {
+		case hardware.StageBox:
+			// Check whether track is on this device.
+			if t.TrackNum() > offset+dev.NumInputs() {
+				offset += dev.NumInputs()
+				continue
+			}
+			moniker := fmt.Sprintf("%d", t.TrackNum()-offset)
+			return dev, dev.Input(moniker), nil
+		default:
+			// Check whether the current device has enough inputs for the track number.
+			if t.TrackNum() > dev.NumOutputs() {
+				continue
+			}
+			moniker := fmt.Sprintf("%d", t.TrackNum())
+			return dev, dev.Output(moniker), nil
 		}
-		// Found it.
-		moniker := fmt.Sprintf("%d", t.TrackNum()-offset)
-		return sb, sb.Input(moniker), nil
 	}
+
 	return nil, nil, fmt.Errorf("channel not found")
 }

@@ -7,12 +7,24 @@ package venue
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/kward/golib/errors"
 	"github.com/kward/tracks/venue/hardware"
 	"google.golang.org/grpc/codes"
 	xmlpath "gopkg.in/xmlpath.v2"
+)
+
+const (
+	Console  = "Console"
+	Engine   = "Engine"
+	Local    = "Local"
+	ProTools = "Pro Tools"
+	Stage1   = "Stage 1"
+	Stage2   = "Stage 2"
+	Stage3   = "Stage 3"
+	Stage4   = "Stage 4"
 )
 
 func init() {
@@ -124,17 +136,32 @@ func NewDevice(typ hardware.Hardware, name string, inputs, outputs Channels) *De
 	}
 }
 
+// Type returns the device hardware type.
+func (d *Device) Type() hardware.Hardware { return d.typ }
+
 // Name returns the device name.
 func (d *Device) Name() string { return d.name }
 
 // Input returns a copy of the named input channel.
-func (d *Device) Input(ch string) *Channel { return d.inputs[ch] }
+func (d *Device) Input(ch string) *Channel {
+	prefix := ""
+	if d.typ == hardware.ProTools {
+		prefix = "FWx "
+	}
+	return d.inputs[prefix+ch]
+}
 
 // NumInputs returns the number of input channels.
 func (d *Device) NumInputs() int { return len(d.inputs) }
 
 // Output returns a copy of the named output channel.
-func (d *Device) Output(ch string) *Channel { return d.outputs[ch] }
+func (d *Device) Output(ch string) *Channel {
+	prefix := ""
+	if d.typ == hardware.ProTools {
+		prefix = "FWx "
+	}
+	return d.outputs[prefix+ch]
+}
 
 // NumOutputs returns the number of output channels.
 func (d *Device) NumOutputs() int { return len(d.outputs) }
@@ -142,11 +169,11 @@ func (d *Device) NumOutputs() int { return len(d.outputs) }
 // String implements the fmt.Stringer interface.
 func (d *Device) String() string {
 	s := fmt.Sprintf("{name: %s inputs:{", d.name)
-	for _, ch := range d.inputs {
+	for _, ch := range d.inputs.Sorted() {
 		s += ch.String()
 	}
 	s += "} outputs:{"
-	for _, ch := range d.outputs {
+	for _, ch := range d.outputs.Sorted() {
 		s += ch.String()
 	}
 	s += "}"
@@ -158,7 +185,7 @@ func discoverDevices(root *xmlpath.Node) (Devices, error) {
 	devs := make(Devices)
 
 	for _, name := range []string{
-		"Console", "Engine", "Local", "Pro Tools", "Stage 1", "Stage 2", "Stage 3", "Stage 4",
+		Console, Engine, Local, ProTools, Stage1, Stage2, Stage3, Stage4,
 	} {
 		dev, err := discoverDevice(root, name)
 		switch errors.Code(err) {
@@ -221,6 +248,25 @@ func probeDevice(node *xmlpath.Node, title string) (string, Channels, error) {
 
 // Channels is a map of channels.
 type Channels map[string]*Channel
+
+func (cs Channels) Sorted() ChannelsByMoniker {
+	chs := ChannelsByMoniker{}
+	for _, ch := range cs {
+		chs = append(chs, ch)
+	}
+	sort.Sort(chs)
+	return chs
+}
+
+type ChannelsByMoniker []*Channel
+
+// Verify proper interface implementation.
+var _ sort.Interface = new(ChannelsByMoniker)
+
+// TODO(kward) Make this a numeric sort, instead of alphanumeric.
+func (d ChannelsByMoniker) Len() int           { return len(d) }
+func (d ChannelsByMoniker) Less(i, j int) bool { return d[i].moniker < d[j].moniker }
+func (d ChannelsByMoniker) Swap(i, j int)      { d[i], d[j] = d[j], d[i] }
 
 // Channel describes a device channel.
 type Channel struct {
