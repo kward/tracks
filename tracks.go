@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sort"
 	"strings"
 
 	kioutil "github.com/kward/golib/io/ioutil"
@@ -14,7 +15,7 @@ import (
 )
 
 const (
-	infoFileFlag = "info_file"
+	patchFileFlag = "patch_file"
 )
 
 var (
@@ -26,21 +27,22 @@ var (
 		"rename": true,
 	}
 
-	behavior string
-	dryRun   = flag.Bool("dry_run", false, "Do a dry run.")
-	infoFile = flag.String(infoFileFlag, "", "Venue info file.")
-	srcDir   = flag.String("src_dir", ".", "Source directory.")
-	destDir  = flag.String("dest_dir", "", "Destination directory. Leave empty to rename in place.")
+	behavior  string
+	dryRun    = flag.Bool("dry_run", false, "Do a dry run.")
+	patchFile = flag.String(patchFileFlag, "", "Venue patch file.")
+	srcDir    = flag.String("src_dir", ".", "Source directory.")
+	destDir   = flag.String("dest_dir", "", "Destination directory. Leave empty to rename in place.")
 
 	fnReadDir = ioutil.ReadDir
 )
 
 func init() {
-	bs := []string{}
+	bs := sort.StringSlice{}
 	for b := range behaviors {
 		bs = append(bs, b)
 	}
-	flag.StringVar(&behavior, "behavior", "move", fmt.Sprintf("Behavior; one of %s", bs))
+	sort.Sort(bs)
+	flag.StringVar(&behavior, "behavior", "copy", fmt.Sprintf("File manipulation behavior, one of %s", bs))
 
 	flag.Parse()
 }
@@ -62,8 +64,8 @@ func flags() {
 	if *destDir == "" {
 		*destDir = *srcDir
 	}
-	if *infoFile == "" {
-		fmt.Printf("empty %s flag\n", infoFileFlag)
+	if *patchFile == "" {
+		fmt.Printf("empty %s flag\n", patchFileFlag)
 		os.Exit(1)
 	}
 }
@@ -76,9 +78,9 @@ func main() {
 	flags()
 
 	// Read Venue file.
-	data, err := ioutil.ReadFile(*infoFile)
+	data, err := ioutil.ReadFile(*patchFile)
 	if err != nil {
-		fmt.Printf("error reading Venue info file; %s\n", err)
+		fmt.Printf("error reading Venue patch file; %s\n", err)
 		os.Exit(1)
 	}
 	v := venue.NewVenue()
@@ -124,10 +126,6 @@ func main() {
 	}
 
 	// Do work.
-	if *dryRun {
-		fmt.Println("Doing a dry run.")
-	}
-
 	switch behavior {
 	case "copy":
 		fmt.Println("Copying:")
@@ -163,6 +161,10 @@ func main() {
 				os.Exit(1)
 			}
 		}
+	}
+
+	if *dryRun {
+		fmt.Println("This was a dry run. No permanent changes were made.")
 	}
 }
 

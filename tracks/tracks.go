@@ -19,13 +19,24 @@ func init() {
 // Tracks is a map of tracks.
 type Tracks map[int]*Track
 
+// TrackSlice is a slice of tracks.
+type TrackSlice []*Track
+
+// Verify proper interface implementation.
+var _ sort.Interface = (*TrackSlice)(nil)
+
+// Sort tracks based on their track number.
+func (ts TrackSlice) Len() int           { return len(ts) }
+func (ts TrackSlice) Less(i, j int) bool { return ts[i].tnum < ts[j].tnum }
+func (ts TrackSlice) Swap(i, j int)      { ts[i], ts[j] = ts[j], ts[i] }
+
 // Slice returns the Tracks as a slice.
 func (ts Tracks) Slice() []*Track {
-	slice := []*Track{}
+	slice := TrackSlice{}
 	for _, t := range ts {
 		slice = append(slice, t)
 	}
-	sort.Slice(slice, func(i, j int) bool { return slice[i].tnum < slice[j].tnum })
+	sort.Sort(slice)
 	return slice
 }
 
