@@ -36,7 +36,7 @@ The example below will make a new copy of all files in a new location. You will 
 
 Save your Tracks Live sessions as you normally would. The following screenshot shows that I have saved my session as `~/Music/Tracks Live/20170916 ICF Ladies Night`.
 
-![Waves Tracks Live saved session](resources/Waves Tracks Live - Saved session.png)
+![Waves Tracks Live saved session](https://github.com/kward/tracks/tree/master/resources/Waves Tracks Live - Saved session.png)
 
 ### Exporting a patch list from VENUE
 
@@ -44,11 +44,11 @@ Use the VENUE Patchlist export function, or the Info export function, to write y
 
 **Export patch list**
 
-![Avid VENUE - Patchbay - Export patch list](resources/Avid VENUE - Patchbay - Export patch list.png)
+![Avid VENUE - Patchbay - Export patch list](https://github.com/kward/tracks/tree/master/resources/Avid VENUE - Patchbay - Export patch list.png)
 
 **Export info**
 
-![Avid VENUE - Options - System - Info](resources/Avid VENUE - Options - System - Info.png)
+![Avid VENUE - Options - System - Info](https://github.com/kward/tracks/tree/master/resources/Avid VENUE - Options - System - Info.png)
 
 VENUE normally writes the patch file to the root of the USB stick with a filename like `Avid VENUE Patch List Sep 10 2017, 4-51 PM.html`. Feel free to copy, move, or rename that file to a location useful to you.
 
