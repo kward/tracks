@@ -36,7 +36,7 @@ The example below will make a new copy of all files in a new location. You will 
 
 Save your Tracks Live sessions as you normally would. The following screenshot shows that I have saved my session as `~/Music/Tracks Live/20170916 ICF Ladies Night`.
 
-![Waves Tracks Live saved session](https://github.com/kward/tracks/tree/master/resources/Waves%20Tracks%20Live%20-%20Saved%20session.png)
+![Waves Tracks Live saved session](https://github.com/kward/tracks/raw/master/resources/Waves%20Tracks%20Live%20-%20Saved%20session.png)
 
 ### Exporting a patch list from VENUE
 
