@@ -149,3 +149,20 @@ func TestDiscoverDevices(t *testing.T) {
 		}
 	}
 }
+
+func TestChannelCleanName(t *testing.T) {
+	for _, tt := range []struct {
+		desc      string
+		name      string
+		cleanName string
+	}{
+		{"mono", "eGit", "eGit"},
+		{"stereo-as-mono", "eGit-L, eGit-R", "eGit"},
+		{"track with comma", "v1, v2", "v1, v2"},
+	} {
+		ch := &Channel{name: tt.name}
+		if got, want := ch.CleanName(), tt.cleanName; got != want {
+			t.Errorf("%s: CleanName() = %s, want %s", tt.desc, got, want)
+		}
+	}
+}

@@ -313,6 +313,27 @@ func (c *Channel) Equal(c2 *Channel) bool {
 // Name returns the channel name.
 func (c *Channel) Name() string { return c.name }
 
+func (c *Channel) CleanName() string {
+	if c.name == "" {
+		return c.name
+	}
+	// Check string for format of "blah, blah".
+	z := strings.SplitN(c.name, ", ", 2)
+	if len(z) == 1 || len(z) > 2 {
+		return c.name
+	}
+	// Strip last two chars of each, and see if they match.
+	if len(z[0]) <= 2 || len(z[1]) <= 2 {
+		return c.name
+	}
+	left, right := z[0][0:len(z[0])-2], z[1][0:len(z[1])-2]
+	if strings.Compare(left, right) == 0 {
+		return left
+	}
+
+	return c.name
+}
+
 // String implements the fmt.Stringer interface.
 func (c *Channel) String() string {
 	s := fmt.Sprintf("{moniker: %s", c.moniker)

@@ -210,7 +210,7 @@ func NameTracks(ts tracks.Tracks, ds venue.Devices) (tracks.Tracks, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error mapping track to channel; %s", err)
 		}
-		ts[i].SetName(ch.Name())
+		ts[i].SetName(ch.CleanName())
 	}
 	return ts, nil
 }
