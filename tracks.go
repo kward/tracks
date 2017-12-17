@@ -218,6 +218,8 @@ func NameTracks(ts tracks.Tracks, ds venue.Devices) (tracks.Tracks, error) {
 func mapTrackToChannel(t *tracks.Track, devs venue.Devices) (*venue.Device, *venue.Channel, error) {
 	// Walk the stage boxes in order, counting channels as we go.
 	offset := 0
+	// Track whether we've found an empty channel name.
+	empty := false
 
 	// Search the devices based on their order in the slice.
 	// Note: the stage boxes must be in sorted order.
@@ -235,15 +237,38 @@ func mapTrackToChannel(t *tracks.Track, devs venue.Devices) (*venue.Device, *ven
 				continue
 			}
 			moniker := fmt.Sprintf("%d", t.TrackNum()-offset)
-			return dev, dev.Input(moniker), nil
-		default:
-			// Check whether the current device has enough inputs for the track number.
+			ch := dev.Input(moniker)
+			if ch == nil {
+				continue
+			}
+			if ch.Name() == "" {
+				empty = true
+				continue
+			}
+			return dev, ch, nil
+		case hardware.Local, hardware.ProTools:
+			// Check whether the current device has enough inputs for the track
+			// number.
 			if t.TrackNum() > dev.NumOutputs() {
 				continue
 			}
 			moniker := fmt.Sprintf("%d", t.TrackNum())
-			return dev, dev.Output(moniker), nil
+			ch := dev.Output(moniker)
+			if ch == nil {
+				continue
+			}
+			if ch.Name() == "" {
+				empty = true
+				continue
+			}
+			return dev, ch, nil
+		default:
+			return nil, nil, fmt.Errorf("unrecognized hardware")
 		}
+	}
+	// No valid channel name found, so return Pro Tools device and empty channel.
+	if empty {
+		return devs[venue.ProTools], &venue.Channel{}, nil
 	}
 
 	return nil, nil, fmt.Errorf("channel not found")

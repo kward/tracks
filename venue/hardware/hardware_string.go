@@ -4,9 +4,9 @@ package hardware
 
 import "fmt"
 
-const _Hardware_name = "StageBoxLocalProTools"
+const _Hardware_name = "UnknownStageBoxLocalProTools"
 
-var _Hardware_index = [...]uint8{0, 8, 13, 21}
+var _Hardware_index = [...]uint8{0, 7, 15, 20, 28}
 
 func (i Hardware) String() string {
 	if i < 0 || i >= Hardware(len(_Hardware_index)-1) {

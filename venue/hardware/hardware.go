@@ -7,7 +7,8 @@ type Hardware int
 //go:generate stringer -type=Hardware
 
 const (
-	StageBox Hardware = iota
+	Unknown Hardware = iota
+	StageBox
 	Local
 	ProTools
 )

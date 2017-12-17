@@ -143,25 +143,37 @@ func (d *Device) Type() hardware.Hardware { return d.typ }
 func (d *Device) Name() string { return d.name }
 
 // Input returns a copy of the named input channel.
-func (d *Device) Input(ch string) *Channel {
-	prefix := ""
-	if d.typ == hardware.ProTools {
-		prefix = "FWx "
+func (d *Device) Input(moniker string) *Channel { return deviceChannel(d.typ, d.inputs, moniker) }
+
+// Output returns a copy of the named output channel, or nil if not found.
+func (d *Device) Output(moniker string) *Channel { return deviceChannel(d.typ, d.outputs, moniker) }
+
+func deviceChannel(t hardware.Hardware, chs Channels, moniker string) *Channel {
+	// Choose prefix(es).
+	ps := []string{}
+	switch t {
+	case hardware.ProTools:
+		ps = append(ps, "FWx ", "Pro Tools ")
+	default:
+		ps = append(ps, "")
 	}
-	return d.inputs[prefix+ch]
+
+	// Search for channel with prefix. Returns nil if none is found.
+	var (
+		c  *Channel
+		ok bool
+	)
+	for _, p := range ps {
+		c, ok = chs[p+moniker]
+		if !ok {
+			continue
+		}
+	}
+	return c
 }
 
 // NumInputs returns the number of input channels.
 func (d *Device) NumInputs() int { return len(d.inputs) }
-
-// Output returns a copy of the named output channel.
-func (d *Device) Output(ch string) *Channel {
-	prefix := ""
-	if d.typ == hardware.ProTools {
-		prefix = "FWx "
-	}
-	return d.outputs[prefix+ch]
-}
 
 // NumOutputs returns the number of output channels.
 func (d *Device) NumOutputs() int { return len(d.outputs) }
@@ -203,9 +215,17 @@ func discoverDevices(root *xmlpath.Node) (Devices, error) {
 
 // discoverDevice walks the XML, looking for specific device inputs and outputs.
 func discoverDevice(root *xmlpath.Node, name string) (*Device, error) {
-	dev := &Device{
-		typ:  hardware.ProTools,
-		name: name,
+	dev := &Device{name: name}
+
+	switch name {
+	case "Console", "Engine", "Local":
+		dev.typ = hardware.Local
+	case "Pro Tools":
+		dev.typ = hardware.ProTools
+	case "Stage 1", "Stage 2", "Stage 3", "Stage 4":
+		dev.typ = hardware.StageBox
+	default:
+		dev.typ = hardware.Unknown
 	}
 
 	iter := xmlpath.MustCompile(fmt.Sprintf(xpaths["devices"].xpath, name, "Inputs")).Iter(root)
