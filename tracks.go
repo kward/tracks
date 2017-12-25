@@ -19,7 +19,6 @@ const (
 )
 
 var (
-	// TODO(Kate) Add support for copy.
 	behaviors = map[string]bool{
 		"copy": true, "cp": true,
 		"link": true, "ln": true,
