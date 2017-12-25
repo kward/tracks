@@ -22,6 +22,8 @@ This software is designed to solve the above problems.
 
 [![GoDoc](https://godoc.org/github.com/kward/tracks?status.svg)](https://godoc.org/github.com/kward/tracks)
 [![Travis CI](https://travis-ci.org/kward/tracks.png?branch=master)](https://travis-ci.org/kward/tracks)
+[![GoCover](https://gocover.io/_badge/github.com/kward/tracks?0 "Code coverage.")](https://gocover.io/github.com/kward/tracks)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kward/tracks "Report card.")](https://goreportcard.com/report/github.com/kward/tracks)
 
 The software is distributed as source code. To compile the code, the [Go programming language](https://golang.org/) must be installed, and the source code and relative libraries installed. See the [Installation](#installation) section below for the necessary steps.
 
