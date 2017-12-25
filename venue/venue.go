@@ -396,18 +396,18 @@ type XPath struct {
 
 var xpaths = map[string]XPath{
 	// Static paths.
-	"console": XPath{
+	"console": {
 		xpath: `//meta[@name='description']/@content`},
-	"version": XPath{
+	"version": {
 		xpath: `//meta[@name='author']/@content`},
-	"show": XPath{
+	"show": {
 		xpath: `//table//td[contains(span,'Show:')]/../td[2]`},
-	"channel": XPath{
+	"channel": {
 		xpath: `../tr`},
-	"channelDetail": XPath{
+	"channelDetail": {
 		xpath: `td`},
 	// Dynamic paths.
-	"devices": XPath{
+	"devices": {
 		xpath:   `//table//tr[contains(td/span,'%s') and contains(td/span,'%s')]`,
 		dynamic: true},
 }

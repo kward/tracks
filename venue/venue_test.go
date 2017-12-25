@@ -31,7 +31,7 @@ var testdata []*TestData
 func init() {
 	testdata = []*TestData{
 		// Avid S3L-X console doing recording.
-		&TestData{
+		{
 			name:       "20170526 ICF Conference Worship Night.html",
 			console:    "Avid VENUE",
 			version:    "VENUE 4.5.3",
@@ -41,7 +41,7 @@ func init() {
 			numInputs:  []int{4, 11, 64, 16, 16, 16, 16},
 			numOutputs: []int{4, 10, 64, 12, 12, 12, 12}},
 		// Avid Profile console doing FoH and in-ear monitoring.
-		&TestData{
+		{
 			name:       "20170906 ICF Ladies Night.html",
 			console:    "Avid VENUE",
 			version:    "VENUE 4.5.3",
@@ -51,7 +51,7 @@ func init() {
 			numInputs:  []int{31, 32, 48},
 			numOutputs: []int{28, 32, 48}},
 		// Avid D-Show console doing FoH.
-		&TestData{
+		{
 			name:       "20170910 Avid D-Show Patch List.html",
 			console:    "Avid VENUE",
 			version:    "D-Show 3.1.1",
@@ -60,7 +60,7 @@ func init() {
 			devTypes:   []hardware.Hardware{hardware.ProTools, hardware.StageBox},
 			numInputs:  []int{32, 48},
 			numOutputs: []int{32, 48}},
-		&TestData{
+		{
 			name:       "20170910 Avid D-Show System Info.html",
 			console:    "Avid VENUE",
 			version:    "D-Show 3.1.1",
@@ -70,7 +70,7 @@ func init() {
 			numInputs:  []int{32, 48},
 			numOutputs: []int{32, 48}},
 		// Avid S3L-X console doing recording.
-		&TestData{
+		{
 			name:       "20170910 Avid S3L-X Patch List.html",
 			console:    "Avid VENUE",
 			version:    "VENUE 4.5.3",
@@ -79,7 +79,7 @@ func init() {
 			devTypes:   []hardware.Hardware{hardware.Local, hardware.Local, hardware.ProTools, hardware.StageBox, hardware.StageBox, hardware.StageBox, hardware.StageBox},
 			numInputs:  []int{4, 11, 64, 16, 16, 16, 16},
 			numOutputs: []int{4, 10, 64, 12, 12, 12, 12}},
-		&TestData{
+		{
 			name:       "20170910 Avid S3L-X System Info.html",
 			console:    "Avid VENUE",
 			version:    "VENUE 4.5.3",
