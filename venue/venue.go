@@ -1,6 +1,7 @@
 /*
 Package venue provides functionality for parsing and understanding the Venue
-Info (Options > System > Info) HTML output.
+Patchlist (Patchbay > Export patch list) or Info (Options > System > Info) HTML
+output.
 */
 package venue
 
