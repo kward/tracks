@@ -14,14 +14,79 @@ import (
 )
 
 func init() {
-	commands = append(commands, venueCommands()...)
+	c := "venue"
+	f := []cli.Flag{
+		cli.StringFlag{
+			Name:  "patch_file,p",
+			Usage: "Venue patch or info file",
+		},
+		cli.StringFlag{
+			Name:  "src_dir,s",
+			Usage: "source directory",
+		},
+		cli.StringFlag{
+			Name:  "dest_dir,d",
+			Usage: "destination directory (leave empty if renaming in-place)",
+		},
+	}
+	commands = append(commands, []cli.Command{
+		{
+			Name:     "copy",
+			Usage:    "copy tracks with new names",
+			Category: c,
+			Flags:    f,
+			Action:   VenueCopyAction,
+			After:    VenueDryRunAction,
+		}, {
+			Name:     "link",
+			Usage:    "make links with new names, without removing original files",
+			Category: c,
+			Flags:    f,
+			Action:   VenueLinkAction,
+			After:    VenueDryRunAction,
+		}, {
+			Name:     "move",
+			Usage:    "move or rename tracks",
+			Category: c,
+			Flags:    f,
+			Action:   VenueMoveAction,
+			After:    VenueDryRunAction,
+		},
+	}...)
+}
+
+// VenueFlags holds the values of user-defined flags.
+type VenueFlags struct {
+	dryRun          bool
+	patchFile       string
+	srcDir, destDir string
+}
+
+func venueFlags(ctx *cli.Context) (VenueFlags, error) {
+	// Validate flags.
+	for _, f := range []string{"patch_file", "src_dir"} {
+		if !ctx.IsSet(f) {
+			return VenueFlags{}, fmt.Errorf("missing %s flag", f)
+		}
+	}
+	if !ctx.IsSet("dest_dir") {
+		ctx.Set("dest_dir", ctx.String("src_dir"))
+	}
+
+	// Parse flags.
+	return VenueFlags{
+		dryRun:    ctx.GlobalBool("dry_run"),
+		patchFile: ctx.String("patch_file"),
+		srcDir:    ctx.String("src_dir"),
+		destDir:   ctx.String("dest_dir"),
+	}, nil
 }
 
 // VenueCopyAction implements cli.ActionFunc.
 func VenueCopyAction(ctx *cli.Context) error {
 	flags, err := venueFlags(ctx)
 	if err != nil {
-		return err
+		return cli.NewExitError(err, sysexits.Usage.Int())
 	}
 	fmt.Println("Copying:")
 	names, err := venueNames(flags)
@@ -38,7 +103,7 @@ func VenueCopyAction(ctx *cli.Context) error {
 func VenueLinkAction(ctx *cli.Context) error {
 	flags, err := venueFlags(ctx)
 	if err != nil {
-		return err
+		return cli.NewExitError(err, sysexits.Usage.Int())
 	}
 	fmt.Println("Linking:")
 	names, err := venueNames(flags)
@@ -55,7 +120,7 @@ func VenueLinkAction(ctx *cli.Context) error {
 func VenueMoveAction(ctx *cli.Context) error {
 	flags, err := venueFlags(ctx)
 	if err != nil {
-		return err
+		return cli.NewExitError(err, sysexits.Usage.Int())
 	}
 	fmt.Println("Moving:")
 	names, err := venueNames(flags)
@@ -93,7 +158,7 @@ func venueNames(flags VenueFlags) ([]VenueNames, error) {
 
 	files, err := action.DiscoverFiles(flags.srcDir, action.FilterWaves)
 	if err != nil {
-		return nil, fmt.Errorf("error discovering files, %s", err)
+		return nil, fmt.Errorf("error discovering wave files, %s", err)
 	}
 
 	sessions, err := tracks.ExtractSessions(files)
@@ -144,72 +209,4 @@ func venueBatch(flags VenueFlags, fn func(src, dest string) error, names []Venue
 		}
 	}
 	return nil
-}
-
-type VenueFlags struct {
-	dryRun          bool
-	patchFile       string
-	srcDir, destDir string
-}
-
-func venueFlags(ctx *cli.Context) (VenueFlags, error) {
-	// Validate flags.
-	for _, f := range []string{"patch_file", "src_dir"} {
-		if !ctx.IsSet(f) {
-			return VenueFlags{}, cli.NewExitError(fmt.Sprintf("missing %s flag", f), sysexits.Usage.Int())
-		}
-	}
-	if !ctx.IsSet("dest_dir") {
-		ctx.Set("dest_dir", ctx.String("src_dir"))
-	}
-
-	// Parse flags.
-	return VenueFlags{
-		dryRun:    ctx.GlobalBool("dry_run"),
-		patchFile: ctx.String("patch_file"),
-		srcDir:    ctx.String("src_dir"),
-		destDir:   ctx.String("dest_dir"),
-	}, nil
-}
-
-func venueCommands() []cli.Command {
-	f := []cli.Flag{
-		cli.StringFlag{
-			Name:  "patch_file,p",
-			Usage: "Venue patch or info file",
-		},
-		cli.StringFlag{
-			Name:  "src_dir,s",
-			Usage: "source directory",
-		},
-		cli.StringFlag{
-			Name:  "dest_dir,d",
-			Usage: "destination directory (leave empty if renaming in-place)",
-		},
-	}
-
-	return []cli.Command{
-		{
-			Name:     "copy",
-			Usage:    "copy tracks with new names",
-			Category: "venue",
-			Flags:    f,
-			Action:   VenueCopyAction,
-			After:    VenueDryRunAction,
-		}, {
-			Name:     "link",
-			Usage:    "make links with new names, without removing original files",
-			Category: "venue",
-			Flags:    f,
-			Action:   VenueLinkAction,
-			After:    VenueDryRunAction,
-		}, {
-			Name:     "move",
-			Usage:    "move or rename tracks",
-			Category: "venue",
-			Flags:    f,
-			Action:   VenueMoveAction,
-			After:    VenueDryRunAction,
-		},
-	}
 }
