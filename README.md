@@ -72,23 +72,24 @@ In this example, we will make a copy of all the files into a newly created `~/Mu
 
 Create the new folder. (This could also be done in Finder or Windows Explorer).
 
-```sh
+```console
 mkdir "~/Music/Sessions/20170916 ICF Ladies Night Stems"
 ```
 
 Do a dry run of copying the files. :memo: No files will be changed because the `--dry_run` flag was given.
 
-```sh
+```console
 tracks \
-  --src_dir "~/Music/Tracks Live/20170906 ICF Ladies Night/interchange/20170916 ICF Ladies Night/audiofiles" \
-  --dest_dir "~/Music/Sessions/20170906 ICF Ladies Night Stems" \
-  --patch_file "~/Music/Sessions/20170906 ICF Ladies Night.html" \
-  --dry_run
+  --dry_run \
+  move \
+    --src_dir "~/Music/Tracks Live/20170906 ICF Ladies Night/interchange/20170916 ICF Ladies Night/audiofiles" \
+    --dest_dir "~/Music/Sessions/20170906 ICF Ladies Night Stems" \
+    --patch_file "~/Music/Sessions/20170906 ICF Ladies Night.html"
 ```
 
 Check the output produced. Below is some sample output (scroll to the right).
 
-```sh
+```console
 Moving:
   "/Users/kward/Music/Tracks Live/20170906 ICF Ladies Night/interchange/20170906 ICF Ladies Night/audiofiles/Track 01-1.wav" --> "/Users/kward/Music/Sessions/20170906 ICF Ladies Night Stems/01-01 Cajon (direct out).wav"
   "/Users/kward/Music/Tracks Live/20170906 ICF Ladies Night/interchange/20170906 ICF Ladies Night/audiofiles/Track 02-1.wav" --> "/Users/kward/Music/Sessions/20170906 ICF Ladies Night Stems/01-02 Shaker (direct out).wav"
@@ -101,31 +102,40 @@ Perform the actual copy by running the command again without the `--dry_run` fla
 
 ```sh
 tracks \
-  --src_dir "~/Music/Tracks Live/20170906 ICF Ladies Night/interchange/20170916 ICF Ladies Night/audiofiles" \
-  --dest_dir "~/Music/Sessions/20170906 ICF Ladies Night Stems" \
-  --patch_file "~/Music/Sessions/20170906 ICF Ladies Night.html"
+  move \
+    --src_dir "~/Music/Tracks Live/20170906 ICF Ladies Night/interchange/20170916 ICF Ladies Night/audiofiles" \
+    --dest_dir "~/Music/Sessions/20170906 ICF Ladies Night Stems" \
+    --patch_file "~/Music/Sessions/20170906 ICF Ladies Night.html"
 ```
 
 The output should be the same as above, but this time the files were actually copied.
 
-:bulb: The default "copy" behavior can be changed by adding the `--behavior` flag with the appropriate behavior (e.g. `--behavior move`).
-
 To see a full list of available flags, request `--help`.
 
-```text
-tracks --help
-Usage of tracks:
-  -behavior string
-        File manipulation behavior, one of [copy cp link ln move mv rename] (default "copy")
-  -dest_dir string
-        Destination directory. Leave empty to rename in place.
-  -dry_run
-        Do a dry run.
-  -patch_file string
-        Venue patch file.
-  -src_dir string
-        Source directory. (default ".")
-exit status 2
+```console
+$ tracks --help
+NAME:
+   tracks - A tool for integrating Waves Tracks and Avid Venue
+
+USAGE:
+   tracks [global options] command [command options] [arguments...]
+
+COMMANDS:
+     help, h  Shows a list of commands or help for one command
+
+   venue:
+     copy  copy tracks with new names
+     link  make links with new names, without removing original files
+     move  move or rename tracks
+
+   wave:
+     check  check wave files for known errors
+     info   output info about wave file
+
+GLOBAL OPTIONS:
+   --dry_run, -n  do a dry run
+   --help, -h     show help
+   --version, -v  print the version
 ```
 
 ## Installation
@@ -150,26 +160,14 @@ Log out and back in to test that the new environment variables were configured p
 
 Download the Tracks tool source code. This will automatically compile the code, and place a binary in the `$GOBIN` directory.
 
-```sh
+```console
 go get -v -t github.com/kward/tracks
 ```
 
 Test the installation.
 
-```sh
+```console
 tracks --help
-Usage of tracks:
-  -behavior string
-        File manipulation behavior, one of [copy cp link ln move mv rename] (default "copy")
-  -dest_dir string
-        Destination directory. Leave empty to rename in place.
-  -dry_run
-        Do a dry run.
-  -patch_file string
-        Venue patch file.
-  -src_dir string
-        Source directory. (default ".")
-
 ```
 
 ## Updating
