@@ -88,11 +88,11 @@ func VenueCopyAction(ctx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err, sysexits.Usage.Int())
 	}
-	fmt.Println("Copying:")
 	names, err := venueNames(flags)
 	if err != nil {
 		return cli.NewExitError(err, sysexits.Software.Int())
 	}
+	fmt.Println("Copying:")
 	if err := venueBatch(flags, k8os.Copy, names); err != nil {
 		return cli.NewExitError(fmt.Sprintf("error copying file, %s", err), sysexits.Software.Int())
 	}
@@ -105,11 +105,11 @@ func VenueLinkAction(ctx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err, sysexits.Usage.Int())
 	}
-	fmt.Println("Linking:")
 	names, err := venueNames(flags)
 	if err != nil {
 		return cli.NewExitError(err, sysexits.Software.Int())
 	}
+	fmt.Println("Linking:")
 	if err := venueBatch(flags, os.Link, names); err != nil {
 		return cli.NewExitError(fmt.Sprintf("error copying file, %s", err), sysexits.Software.Int())
 	}
@@ -122,11 +122,11 @@ func VenueMoveAction(ctx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err, sysexits.Usage.Int())
 	}
-	fmt.Println("Moving:")
 	names, err := venueNames(flags)
 	if err != nil {
 		return cli.NewExitError(err, sysexits.Software.Int())
 	}
+	fmt.Println("Moving:")
 	if err := venueBatch(flags, os.Rename, names); err != nil {
 		return cli.NewExitError(fmt.Sprintf("error copying file, %s", err), sysexits.Software.Int())
 	}
@@ -184,7 +184,7 @@ func venueNames(flags VenueFlags) ([]VenueNames, error) {
 			if name == "" {
 				name = fmt.Sprintf("Track %02d", t.TrackNum())
 			}
-			dest := fmt.Sprintf("%02d-%02d %s.wav", s.Num(), t.TrackNum(), name)
+			dest := fmt.Sprintf("%02d-%02d %s.wav", s.Num(), t.TrackNum(), action.MapTrackNameToFilename(name))
 			t.SetDest(dest)
 			names = append(names, VenueNames{t.Src(), t.Dest()})
 		}

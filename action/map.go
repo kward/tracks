@@ -2,6 +2,7 @@ package action
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/kward/tracks/tracks"
 	"github.com/kward/tracks/venue"
@@ -77,4 +78,11 @@ func mapTrackToChannel(t *tracks.Track, devs venue.Devices) (*venue.Device, *ven
 	}
 
 	return nil, nil, fmt.Errorf("channel not found")
+}
+
+// MapTrackNameToFilename returns a valid filename for a track name.
+func MapTrackNameToFilename(name string) string {
+	name = strings.Replace(name, "/", "_", -1)  // Unix path separator.
+	name = strings.Replace(name, "\\", "_", -1) // Windows path separator.
+	return name
 }

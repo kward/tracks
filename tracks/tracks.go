@@ -97,13 +97,14 @@ func (t *Track) SetDest(dest string) *Track { t.dest = dest; return t }
 func (t *Track) TrackNum() int   { return t.tnum }
 func (t *Track) SessionNum() int { return t.snum }
 
+// matchTrack returns true if the file name matches the Tracks pattern.
+func matchTrack(file string) bool {
+	return trackRE.MatchString(file)
+}
+
 // extractTrack returns a populated Track from a file name.
 func extractTrack(file string) (*Track, error) {
-	if !trackRE.MatchString(file) {
-		return nil, fmt.Errorf("can't match %q", file)
-	}
 	name := trackRE.ReplaceAllString(file, "${name}")
-
 	tnum, err := strconv.Atoi(trackRE.ReplaceAllString(file, "${channel}"))
 	if err != nil {
 		return nil, fmt.Errorf("error converting %q channel, %s", file, err)

@@ -1,6 +1,9 @@
 package tracks
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 // Sessions holds a map of session numbers to Session data.
 type Sessions map[int]*Session
@@ -41,6 +44,10 @@ func ExtractSessions(files []string) (Sessions, error) {
 
 	sessions := make(Sessions)
 	for _, file := range files {
+		if !matchTrack(file) {
+			fmt.Fprintf(os.Stderr, "ignoring %q\n", file)
+			continue
+		}
 		t, err := extractTrack(file)
 		if err != nil {
 			return nil, err

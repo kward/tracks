@@ -41,6 +41,23 @@ func TestMapTrackToChannel(t *testing.T) {
 	}
 }
 
+func TestMapTrackNameToFilename(t *testing.T) {
+	for _, tt := range []struct {
+		desc     string
+		name     string
+		filename string
+	}{
+		{"clean", "abc123", "abc123"},
+		{"unix separator", "abc/123", "abc_123"},
+		{"windows separator", "abc\\123", "abc_123"},
+		{"empty", "", ""},
+	} {
+		if got, want := MapTrackNameToFilename(tt.name), tt.filename; got != want {
+			t.Errorf("%s: MapTrackNameToFilename(%s) = %s, want %s", tt.desc, tt.name, got, want)
+		}
+	}
+}
+
 func mockDevices() venue.Devices {
 	return venue.Devices{
 		"Stage 1": venue.NewDevice(
