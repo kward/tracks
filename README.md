@@ -73,13 +73,13 @@ In this example, we will make a copy of all the files into a newly created `~/Mu
 Create the new folder. (This could also be done in Finder or Windows Explorer).
 
 ```console
-mkdir "~/Music/Sessions/20170916 ICF Ladies Night Stems"
+$ mkdir "~/Music/Sessions/20170916 ICF Ladies Night Stems"
 ```
 
 Do a dry run of copying the files. :memo: No files will be changed because the `--dry_run` flag was given.
 
 ```console
-tracks \
+$ tracks \
   --dry_run \
   move \
     --src_dir "~/Music/Tracks Live/20170906 ICF Ladies Night/interchange/20170916 ICF Ladies Night/audiofiles" \
@@ -89,7 +89,7 @@ tracks \
 
 Check the output produced. Below is some sample output (scroll to the right).
 
-```console
+```text
 Moving:
   "/Users/kward/Music/Tracks Live/20170906 ICF Ladies Night/interchange/20170906 ICF Ladies Night/audiofiles/Track 01-1.wav" --> "/Users/kward/Music/Sessions/20170906 ICF Ladies Night Stems/01-01 Cajon (direct out).wav"
   "/Users/kward/Music/Tracks Live/20170906 ICF Ladies Night/interchange/20170906 ICF Ladies Night/audiofiles/Track 02-1.wav" --> "/Users/kward/Music/Sessions/20170906 ICF Ladies Night Stems/01-02 Shaker (direct out).wav"
@@ -100,8 +100,8 @@ Moving:
 
 Perform the actual copy by running the command again without the `--dry_run` flag (notice the trailing `\` character on the `--patch_file` line was also removed).
 
-```sh
-tracks \
+```console
+$ tracks \
   move \
     --src_dir "~/Music/Tracks Live/20170906 ICF Ladies Night/interchange/20170916 ICF Ladies Night/audiofiles" \
     --dest_dir "~/Music/Sessions/20170906 ICF Ladies Night Stems" \
@@ -145,10 +145,10 @@ Download and install the latest version of Go using instructions from https://go
 
 To test setup a Ubuntu 16.04 Linux machine, these commands were used:
 
-```text
-sudo apt-get install golang
-mkdir ~/opt/go/{bin,pkg,src}
-cat <<EOF >~/.bashrc
+```console
+$ sudo apt-get install golang
+$ mkdir ~/opt/go/{bin,pkg,src}
+$ cat <<EOF >~/.bashrc
 # Golang
 export GOPATH="${HOME}/opt/go"
 export GOBIN="${GOPATH}/bin"
@@ -161,13 +161,13 @@ Log out and back in to test that the new environment variables were configured p
 Download the Tracks tool source code. This will automatically compile the code, and place a binary in the `$GOBIN` directory.
 
 ```console
-go get -v -t github.com/kward/tracks
+$ go get -v -t github.com/kward/tracks
 ```
 
 Test the installation.
 
 ```console
-tracks --help
+$ tracks --help
 ```
 
 ## Updating
@@ -175,8 +175,8 @@ _This section covers updating an existing installation._
 
 To update the software, run the following command to download the latest source, and compile a new binary.
 
-```sh
-go get -v -t -u github.com/kward/tracks
+```console
+$ go get -v -t -u github.com/kward/tracks
 ```
 
 ## Tested software and systems
