@@ -145,7 +145,7 @@ Download and install the latest version of Go using instructions from https://go
 
 To test setup a Ubuntu 16.04 Linux machine, these commands were used:
 
-```sh
+```text
 sudo apt-get install golang
 mkdir ~/opt/go/{bin,pkg,src}
 cat <<EOF >~/.bashrc
