@@ -6,5 +6,6 @@ go:
 
 install:
   - go get -v -t -p 1 github.com/kward/golib/...
+  - go get github.com/urfave/cli
   - go get google.golang.org/grpc/codes
   - go get gopkg.in/xmlpath.v2
