@@ -100,18 +100,18 @@ func (t *Track) SessionNum() int { return t.snum }
 // extractTrack returns a populated Track from a file name.
 func extractTrack(file string) (*Track, error) {
 	if !trackRE.MatchString(file) {
-		return nil, fmt.Errorf("error matching file %q", file)
+		return nil, fmt.Errorf("can't match %q", file)
 	}
 	name := trackRE.ReplaceAllString(file, "${name}")
 
 	tnum, err := strconv.Atoi(trackRE.ReplaceAllString(file, "${channel}"))
 	if err != nil {
-		return nil, fmt.Errorf("error converting file %q channel; %s", file, err)
+		return nil, fmt.Errorf("error converting %q channel, %s", file, err)
 	}
 
 	snum, err := strconv.Atoi(trackRE.ReplaceAllString(file, "${session}"))
 	if err != nil {
-		return nil, fmt.Errorf("error converting file %q session; %s", file, err)
+		return nil, fmt.Errorf("error converting %q session, %s", file, err)
 	}
 
 	return &Track{src: file, name: name, tnum: tnum, snum: snum}, nil

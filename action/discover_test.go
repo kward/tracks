@@ -38,7 +38,7 @@ func TestDiscoverFiles(t *testing.T) {
 			t.Errorf("%s: DiscoverFiles() expected error", tt.desc)
 		}
 		if err != nil && tt.ok {
-			t.Fatalf("%s: DiscoverFiles() unexpected error; %s", tt.desc, err)
+			t.Fatalf("%s: DiscoverFiles() unexpected error, %s", tt.desc, err)
 		}
 		if !tt.ok {
 			continue

@@ -13,7 +13,7 @@ func MapTracksToNames(ts tracks.Tracks, ds venue.Devices) (tracks.Tracks, error)
 	for i, t := range ts {
 		_, ch, err := mapTrackToChannel(t, ds)
 		if err != nil {
-			return nil, fmt.Errorf("error mapping track to channel; %s", err)
+			return nil, fmt.Errorf("error mapping track to channel, %s", err)
 		}
 		ts[i].SetName(ch.CleanName())
 	}
