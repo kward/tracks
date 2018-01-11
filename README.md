@@ -110,6 +110,38 @@ $ tracks \
 
 The output should be the same as above, but this time the files were actually copied.
 
+### Get info about a file
+
+If you are curious about what type of file information a `.wav` file has, you can use the `info` command.
+
+```console
+$ tracks info --file "01-64 Main R -23 LUFS (direct out).wav"
+sample_rate: 48000 Hz, channels: 1 bits_per_sample: 24 frame_count: 307459072 duration: 1h46m45.397333333s
+```
+
+### Checking a file for silence
+
+There are times when Tracks has issues talking to the audio device, happening more frequently than desired between Tracks and my Avid S3L-X. Luckily, Tracks doesn't break the recording off (like Pro Tools does, which is why I don't use Pro Tools for recording via AVB), and instead records only silence.
+
+To test for silence, use the `check` command. The file below unfortunately has several blocks of silence, but now I can quickly document where they are, and don't need to listen to the full 1h46m to find them all.
+
+```console
+$ tracks check --file "01-64 Main R -23 LUFS (direct out).wav"
+3m43s - 3m50s
+6m50s - 6m58s
+27m10s - 27m15s
+27m15s - 27m23s
+48m54s - 48m59s
+49m0s - 49m2s
+58m38s - 58m43s
+58m44s - 58m52s
+1h25m50s - 1h25m55s
+1h25m55s - 1h25m57s
+1h41m17s - 1h41m24s
+```
+
+## Getting help
+
 To see a full list of available flags, request `--help`.
 
 ```console

@@ -14,7 +14,7 @@ func init() {
 	commands = append(commands, []cli.Command{
 		{
 			Name:     "check",
-			Usage:    "check wave files for known errors",
+			Usage:    "check wave file for silence",
 			Category: c,
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "file,f", Usage: "wave filename"},
@@ -34,7 +34,7 @@ func init() {
 		},
 		{
 			Name:     "info",
-			Usage:    "output info about wave file",
+			Usage:    "display info about a wave file",
 			Category: c,
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "file,f", Usage: "wave filename"},
