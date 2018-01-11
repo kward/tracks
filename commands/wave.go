@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/kward/golib/os/sysexits"
-	"github.com/kward/tracks/action"
+	"github.com/kward/tracks/actions"
 	"github.com/loov/audio/codec/wav"
 	"github.com/urfave/cli"
 )
@@ -47,7 +47,7 @@ func WaveCheckAction(ctx *cli.Context) error {
 	}
 	dir := ctx.String("dir")
 
-	files, err := action.DiscoverFiles(dir, action.FilterWaves)
+	files, err := actions.DiscoverFiles(dir, actions.FilterWaves)
 	if err != nil {
 		return cli.NewExitError(err, sysexits.Software.Int())
 	}

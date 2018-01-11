@@ -7,7 +7,7 @@ import (
 
 	k8os "github.com/kward/golib/os"
 	"github.com/kward/golib/os/sysexits"
-	"github.com/kward/tracks/action"
+	"github.com/kward/tracks/actions"
 	"github.com/kward/tracks/tracks"
 	"github.com/kward/tracks/venue"
 	"github.com/urfave/cli"
@@ -156,7 +156,7 @@ func venueNames(flags VenueFlags) ([]VenueNames, error) {
 		return nil, fmt.Errorf("error parsing the Venue data, %s", err)
 	}
 
-	files, err := action.DiscoverFiles(flags.srcDir, action.FilterWaves)
+	files, err := actions.DiscoverFiles(flags.srcDir, actions.FilterWaves)
 	if err != nil {
 		return nil, fmt.Errorf("error discovering wave files, %s", err)
 	}
@@ -169,7 +169,7 @@ func venueNames(flags VenueFlags) ([]VenueNames, error) {
 	// Map tracks to stage boxes.
 	// TODO(20171225 kward): Move to action package.
 	for _, s := range sessions {
-		ts, err := action.MapTracksToNames(s.Tracks(), v.Devices())
+		ts, err := actions.MapTracksToNames(s.Tracks(), v.Devices())
 		if err != nil {
 			return nil, fmt.Errorf("error mapping tracks, %s", err)
 		}
@@ -184,7 +184,7 @@ func venueNames(flags VenueFlags) ([]VenueNames, error) {
 			if name == "" {
 				name = fmt.Sprintf("Track %02d", t.TrackNum())
 			}
-			dest := fmt.Sprintf("%02d-%02d %s.wav", s.Num(), t.TrackNum(), action.MapTrackNameToFilename(name))
+			dest := fmt.Sprintf("%02d-%02d %s.wav", s.Num(), t.TrackNum(), actions.MapTrackNameToFilename(name))
 			t.SetDest(dest)
 			names = append(names, VenueNames{t.Src(), t.Dest()})
 		}
