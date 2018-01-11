@@ -2,12 +2,10 @@ package commands
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/kward/golib/os/sysexits"
 	"github.com/kward/tracks/actions"
-	"github.com/loov/audio/codec/wav"
 	"github.com/urfave/cli"
 )
 
@@ -19,21 +17,27 @@ func init() {
 			Usage:    "check wave files for known errors",
 			Category: c,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "dir,s",
-					Usage: "directory containing wave files",
-				},
+				cli.StringFlag{Name: "file,f", Usage: "wave filename"},
 			},
 			Action: WaveCheckAction,
-		}, {
+		},
+		{
+			Name:     "dump",
+			Usage:    "dump raw wave sample data",
+			Category: c,
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "file,f", Usage: "wave filename"},
+				cli.DurationFlag{Name: "offset,o", Usage: "offset duration"},
+				cli.DurationFlag{Name: "length,l", Usage: "sample length"},
+			},
+			Action: WaveDumpAction,
+		},
+		{
 			Name:     "info",
 			Usage:    "output info about wave file",
 			Category: c,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "file,f",
-					Usage: "file to get info for",
-				},
+				cli.StringFlag{Name: "file,f", Usage: "wave filename"},
 			},
 			Action: WaveInfoAction,
 		},
@@ -42,51 +46,38 @@ func init() {
 
 // WaveCheckAction implements cli.ActionFunc.
 func WaveCheckAction(ctx *cli.Context) error {
-	if !ctx.IsSet("dir") {
-		return cli.NewExitError(fmt.Errorf("missing %s flag", "dir"), sysexits.Usage.Int())
+	if !ctx.IsSet("file") {
+		return cli.NewExitError(fmt.Errorf("--file flag missing"), sysexits.Usage.Int())
 	}
-	dir := ctx.String("dir")
 
-	files, err := actions.DiscoverFiles(dir, actions.FilterWaves)
+	filename := ctx.String("file")
+	f, err := os.Open(filename)
 	if err != nil {
-		return cli.NewExitError(err, sysexits.Software.Int())
+		return cli.NewExitError(err, sysexits.IOError.Int())
 	}
+	defer f.Close()
 
-	for _, file := range files {
-		fqFile := dir + string(os.PathSeparator) + file
-
-		f, err := os.Open(fqFile)
-		if err != nil {
-			fmt.Printf("%s : %s\n", file, err.Error())
-		}
-		defer f.Close()
-
-		if err := waveCheck(fqFile); err != nil {
-			fmt.Printf("%s : %s\n", file, err.Error())
-			continue
-		}
-		fmt.Printf("%s : OK\n", file)
+	if err := actions.WaveCheck(filename); err != nil {
+		return cli.NewExitError(err, sysexits.DataError.Int())
 	}
-
 	return nil
 }
 
-type WaveCheckResult struct {
-	file   string
-	result string
-}
+// WaveDumpAction implements cli.ActionFunc.
+func WaveDumpAction(ctx *cli.Context) error {
+	if !ctx.IsSet("file") {
+		return cli.NewExitError(fmt.Errorf("missing %s flag", "file"), sysexits.Usage.Int())
+	}
 
-func waveCheck(file string) error {
-	d, err := ioutil.ReadFile(file)
+	block, frames, err := actions.WaveDump(ctx.String("file"), ctx.Duration("offset"), ctx.Duration("length"))
 	if err != nil {
 		return err
 	}
-	r, err := wav.NewBytesReader(d)
-	if err != nil {
-		return err
-	}
-	if r.SampleRate() <= 0 {
-		return fmt.Errorf("invalid sample rate")
+	fmt.Printf("frames: %d\n", frames)
+
+	for o := 0; o < frames; o += 4 {
+		d := block[o : o+4]
+		fmt.Printf("%08x  %g %g %g %g\n", o, d[0], d[1], d[2], d[3])
 	}
 	return nil
 }
@@ -96,25 +87,10 @@ func WaveInfoAction(ctx *cli.Context) error {
 	if !ctx.IsSet("file") {
 		return cli.NewExitError(fmt.Errorf("missing %s flag", "file"), sysexits.Usage.Int())
 	}
-	file := ctx.String("file")
-	info, err := waveInfo(file)
+	info, err := actions.WaveInfo(ctx.String("file"))
 	if err != nil {
 		return err
 	}
 	fmt.Println(info)
 	return nil
-}
-
-func waveInfo(file string) (string, error) {
-	d, err := ioutil.ReadFile(file)
-	if err != nil {
-		return "", err
-	}
-
-	r, err := wav.NewBytesReader(d)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("sample_rate: %d channels: %d duration: %s",
-		r.SampleRate(), r.ChannelCount(), r.Duration()), nil
 }
