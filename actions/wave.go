@@ -8,6 +8,8 @@ import (
 	"github.com/kward/goaudio/codec/wav"
 )
 
+const silenceFrames = 10
+
 func WaveCheck(file string) error {
 	r, err := waveReader(file)
 	if err != nil {
@@ -31,8 +33,8 @@ func WaveCheck(file string) error {
 				continue
 			}
 			zeros++
-			// React if we have 10 consecutive zeros.
-			if zeros == 10 && start == 0 {
+			// React if we have consecutive zero frames.
+			if zeros == silenceFrames && start == 0 {
 				start = time.Duration(o/cap) * time.Second
 			}
 		}
