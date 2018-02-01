@@ -159,12 +159,12 @@ func TestDiscoverDevices(t *testing.T) {
 func TestDevicesInputs(t *testing.T) {
 	data, err := ioutil.ReadFile("../testdata/20180128 Avid S3L-X Patch List.html")
 	if err != nil {
-		t.Fatal("error reading patch list; %s", err)
+		t.Fatalf("error reading patch list; %s", err)
 	}
 
 	v := NewVenue()
 	if err := v.Parse(data); err != nil {
-		t.Fatal("error parsing data; %s", err)
+		t.Fatalf("error parsing data; %s", err)
 	}
 
 	chs := v.Devices().Inputs()
@@ -183,7 +183,7 @@ func TestDevicesInputs(t *testing.T) {
 	}
 
 	if got, want := len(chs), 64; got != want {
-		t.Error("InputChannels() length = %d, want %d", got, want)
+		t.Errorf("InputChannels() length = %d, want %d", got, want)
 	}
 }
 

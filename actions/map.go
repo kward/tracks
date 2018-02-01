@@ -42,7 +42,6 @@ func mapTrackToChannel(t *tracks.Track, devs venue.Devices) (*venue.Channel, err
 	}
 	m := venue.Moniker(t.TrackNum())
 	ptch := dev.Output(m)
-	fmt.Printf("pro tools moniker: %s channel: %s\n", m, ptch)
 	if ptch.Name() != "" {
 		return ptch, nil
 	}
