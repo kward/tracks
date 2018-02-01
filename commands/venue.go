@@ -13,6 +13,8 @@ import (
 	"github.com/urfave/cli"
 )
 
+var discoverFilesFn actions.DiscoverFilesFn
+
 func init() {
 	c := "venue"
 	f := []cli.Flag{
@@ -53,7 +55,11 @@ func init() {
 			After:    VenueDryRunAction,
 		},
 	}...)
+
+	resetDiscoverFiles()
 }
+
+func resetDiscoverFiles() { discoverFilesFn = actions.DiscoverFiles }
 
 // VenueFlags holds the values of user-defined flags.
 type VenueFlags struct {
@@ -94,7 +100,7 @@ func VenueCopyAction(ctx *cli.Context) error {
 	}
 	fmt.Println("Copying:")
 	if err := venueBatch(flags, k8os.Copy, names); err != nil {
-		return cli.NewExitError(fmt.Sprintf("error copying file, %s", err), sysexits.Software.Int())
+		return cli.NewExitError(fmt.Sprintf("error copying file; %s", err), sysexits.Software.Int())
 	}
 	return nil
 }
@@ -111,7 +117,7 @@ func VenueLinkAction(ctx *cli.Context) error {
 	}
 	fmt.Println("Linking:")
 	if err := venueBatch(flags, os.Link, names); err != nil {
-		return cli.NewExitError(fmt.Sprintf("error copying file, %s", err), sysexits.Software.Int())
+		return cli.NewExitError(fmt.Sprintf("error copying file; %s", err), sysexits.Software.Int())
 	}
 	return nil
 }
@@ -128,7 +134,7 @@ func VenueMoveAction(ctx *cli.Context) error {
 	}
 	fmt.Println("Moving:")
 	if err := venueBatch(flags, os.Rename, names); err != nil {
-		return cli.NewExitError(fmt.Sprintf("error copying file, %s", err), sysexits.Software.Int())
+		return cli.NewExitError(fmt.Sprintf("error copying file; %s", err), sysexits.Software.Int())
 	}
 	return nil
 }
@@ -149,21 +155,21 @@ func venueNames(flags VenueFlags) ([]VenueNames, error) {
 	// Read Venue file.
 	data, err := ioutil.ReadFile(flags.patchFile)
 	if err != nil {
-		return nil, fmt.Errorf("error reading Venue patch file, %s", err)
+		return nil, fmt.Errorf("error reading Venue patch file; %s", err)
 	}
 	v := venue.NewVenue()
 	if err := v.Parse(data); err != nil {
-		return nil, fmt.Errorf("error parsing the Venue data, %s", err)
+		return nil, fmt.Errorf("error parsing the Venue data; %s", err)
 	}
 
-	files, err := actions.DiscoverFiles(flags.srcDir, actions.FilterWaves)
+	files, err := discoverFilesFn(flags.srcDir, actions.FilterWaves)
 	if err != nil {
-		return nil, fmt.Errorf("error discovering wave files, %s", err)
+		return nil, fmt.Errorf("error discovering wave files; %s", err)
 	}
 
 	sessions, err := tracks.ExtractSessions(files)
 	if err != nil {
-		return nil, fmt.Errorf("error extracting sessions, %s", err)
+		return nil, fmt.Errorf("error extracting sessions; %s", err)
 	}
 
 	// Map tracks to stage boxes.
@@ -171,7 +177,7 @@ func venueNames(flags VenueFlags) ([]VenueNames, error) {
 	for _, s := range sessions {
 		ts, err := actions.MapTracksToNames(s.Tracks(), v.Devices())
 		if err != nil {
-			return nil, fmt.Errorf("error mapping tracks, %s", err)
+			return nil, fmt.Errorf("error mapping tracks; %s", err)
 		}
 		s.SetTracks(ts)
 	}

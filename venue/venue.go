@@ -47,7 +47,8 @@ type Venue struct {
 	version string
 	show    string
 
-	devices Devices
+	devices         Devices
+	inputs, outputs Channels
 }
 
 // NewVenue returns a pointer to an instantiated Venue struct.
@@ -70,6 +71,9 @@ func (v *Venue) String() string {
 
 // Devices returns the known devices.
 func (v *Venue) Devices() Devices {
+	if v == nil {
+		return nil
+	}
 	return v.devices
 }
 
@@ -120,34 +124,74 @@ func (v *Venue) parseMetadata(root *xmlpath.Node) error {
 // Devices is a map of devices.
 type Devices map[string]*Device
 
+// deviceInputs returns all input channels from all stage box devices.
+func (ds Devices) Inputs() map[int]*Channel {
+	if ds == nil {
+		return nil
+	}
+	chs := make(map[int]*Channel)
+	num := 1
+	for _, name := range []string{Stage1, Stage2, Stage3, Stage4} {
+		dev, ok := ds[name]
+		if !ok {
+			continue
+		}
+		for i := 1; i <= dev.NumInputs(); i++ {
+			chs[num] = dev.Input(Moniker(i))
+			num++
+		}
+	}
+	return chs
+}
+
 // Device describes a Venue IO device.
 type Device struct {
-	typ             hardware.Hardware
+	hardware        hardware.Hardware
 	name            string
 	inputs, outputs Channels
 }
 
 // NewDevice returns a pointer to an instantiated Device struct.
-func NewDevice(typ hardware.Hardware, name string, inputs, outputs Channels) *Device {
+func NewDevice(hw hardware.Hardware, name string, inputs, outputs Channels) *Device {
 	return &Device{
-		typ:     typ,
-		name:    name,
-		inputs:  inputs,
-		outputs: outputs,
+		hardware: hw,
+		name:     name,
+		inputs:   inputs,
+		outputs:  outputs,
 	}
 }
 
 // Type returns the device hardware type.
-func (d *Device) Type() hardware.Hardware { return d.typ }
+func (d *Device) Hardware() hardware.Hardware {
+	if d == nil {
+		return hardware.Unknown
+	}
+	return d.hardware
+}
 
 // Name returns the device name.
-func (d *Device) Name() string { return d.name }
+func (d *Device) Name() string {
+	if d == nil {
+		return hardware.Unknown.String()
+	}
+	return d.name
+}
 
 // Input returns a copy of the named input channel.
-func (d *Device) Input(moniker string) *Channel { return deviceChannel(d.typ, d.inputs, moniker) }
+func (d *Device) Input(moniker string) *Channel {
+	if d == nil || moniker == "" {
+		return nil
+	}
+	return deviceChannel(d.hardware, d.inputs, moniker)
+}
 
 // Output returns a copy of the named output channel, or nil if not found.
-func (d *Device) Output(moniker string) *Channel { return deviceChannel(d.typ, d.outputs, moniker) }
+func (d *Device) Output(moniker string) *Channel {
+	if d == nil || moniker == "" {
+		return nil
+	}
+	return deviceChannel(d.hardware, d.outputs, moniker)
+}
 
 func deviceChannel(t hardware.Hardware, chs Channels, moniker string) *Channel {
 	// Choose prefix(es).
@@ -171,6 +215,22 @@ func deviceChannel(t hardware.Hardware, chs Channels, moniker string) *Channel {
 		}
 	}
 	return c
+}
+
+// Inputs returns the device inputs.
+func (d *Device) Inputs() Channels {
+	if d == nil {
+		return nil
+	}
+	return d.inputs
+}
+
+// Outputs returns the device outputs.
+func (d *Device) Outputs() Channels {
+	if d == nil {
+		return nil
+	}
+	return d.outputs
 }
 
 // NumInputs returns the number of input channels.
@@ -220,13 +280,13 @@ func discoverDevice(root *xmlpath.Node, name string) (*Device, error) {
 
 	switch name {
 	case "Console", "Engine", "Local":
-		dev.typ = hardware.Local
+		dev.hardware = hardware.Local
 	case "Pro Tools":
-		dev.typ = hardware.ProTools
+		dev.hardware = hardware.ProTools
 	case "Stage 1", "Stage 2", "Stage 3", "Stage 4":
-		dev.typ = hardware.StageBox
+		dev.hardware = hardware.StageBox
 	default:
-		dev.typ = hardware.Unknown
+		dev.hardware = hardware.Unknown
 	}
 
 	iter := xmlpath.MustCompile(fmt.Sprintf(xpaths["devices"].xpath, name, "Inputs")).Iter(root)
@@ -305,31 +365,54 @@ func NewChannel(moniker, name string) *Channel {
 
 // Equal returns true if the channels are equal.
 func (c *Channel) Equal(c2 *Channel) bool {
+	if c == nil && c2 == nil {
+		return true
+	}
+	if c == nil || c2 == nil {
+		return false
+	}
 	if c.moniker != c2.moniker {
 		return false
 	}
 	return c.name == c2.name
 }
 
-// Name returns the channel name.
-func (c *Channel) Name() string { return c.name }
-
-func (c *Channel) CleanName() string {
-	if c.name == "" {
-		return c.name
+// Moniker returns the channel moniker.
+func (c *Channel) Moniker() string {
+	if c == nil {
+		return ""
 	}
-	// Check string for format of "blah, blah".
+	return c.moniker
+}
+
+// Name returns the channel name.
+func (c *Channel) Name() string {
+	if c == nil {
+		return ""
+	}
+	return c.name
+}
+
+// CleanName returns a clean track name.
+func (c *Channel) CleanName() string {
+	if c == nil || c.name == "" {
+		return ""
+	}
+
+	// Check string for format of "foo, foo".
 	z := strings.SplitN(c.name, ", ", 2)
 	if len(z) == 1 || len(z) > 2 {
+		// No match.
 		return c.name
 	}
-	// Strip last two chars of each, and see if they match.
+	// Check for strings like "foo-L, foo-R", and return only "foo".
 	if len(z[0]) <= 2 || len(z[1]) <= 2 {
+		// One of the strings is too short.
 		return c.name
 	}
-	left, right := z[0][0:len(z[0])-2], z[1][0:len(z[1])-2]
-	if strings.Compare(left, right) == 0 {
-		return left
+	l, r := z[0][0:len(z[0])-2], z[1][0:len(z[1])-2]
+	if strings.Compare(l, r) == 0 {
+		return l
 	}
 
 	return c.name
@@ -414,6 +497,10 @@ var xpaths = map[string]XPath{
 
 //-----------------------------------------------------------------------------
 // Miscellaneous
+
+func Moniker(num int) string {
+	return fmt.Sprintf("%d", num)
+}
 
 func sanitize(text string) string {
 	// Remove &nbsp; equivalent chars.

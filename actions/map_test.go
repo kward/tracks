@@ -13,25 +13,65 @@ func TestMapTrackToChannel(t *testing.T) {
 	for _, tt := range []struct {
 		desc    string
 		track   *tracks.Track
-		device  *venue.Device
 		channel *venue.Channel
 	}{
 		{"track one",
 			tracks.NewTrack("Track", 1, 1),
-			devs["Stage 1"],
 			venue.NewChannel("1", "iOne")},
 		{"track eight",
 			tracks.NewTrack("Track", 8, 1),
-			devs["Stage 2"],
 			venue.NewChannel("4", "iEight")},
 	} {
-		device, channel, err := mapTrackToChannel(tt.track, devs)
+		channel, err := mapTrackToChannel(tt.track, devs)
 		if err != nil {
 			t.Errorf("%s: unexpected error; %s", tt.desc, err)
 			continue
 		}
-		if got, want := device.Name(), tt.device.Name(); got != want {
-			t.Errorf("%s: stage box = %s, want %s", tt.desc, got, want)
+		if got, want := channel, tt.channel; !got.Equal(want) {
+			t.Errorf("%s: channel = %s, want %s", tt.desc, got, want)
+			continue
+		}
+	}
+}
+
+func TestIssue7(t *testing.T) {
+	// In Issue #7, tracks from Stage 2 were mapped into positions on Stage 1 if
+	// the track was unnamed on Stage 1. Strangely, they were also mapped into the
+	// correct Stage 2 position too.
+	devs := venue.Devices{
+		"Stage 1": venue.NewDevice(
+			hardware.StageBox,
+			"Stage 1",
+			venue.Channels{
+				"1": venue.NewChannel("1", "iOne"),
+				"2": venue.NewChannel("2", "")},
+			venue.Channels{},
+		),
+		"Stage 2": venue.NewDevice(
+			hardware.StageBox,
+			"Stage 2",
+			venue.Channels{
+				"1": venue.NewChannel("1", "iThree"),
+				"2": venue.NewChannel("2", "iFour")},
+			venue.Channels{},
+		),
+	}
+
+	for _, tt := range []struct {
+		desc    string
+		track   *tracks.Track
+		channel *venue.Channel
+	}{
+		{"track two",
+			tracks.NewTrack("Track", 2, 1),
+			venue.NewChannel("2", "")},
+		{"track four",
+			tracks.NewTrack("Track", 4, 1),
+			venue.NewChannel("2", "iFour")},
+	} {
+		channel, err := mapTrackToChannel(tt.track, devs)
+		if err != nil {
+			t.Errorf("%s: unexpected error; %s", tt.desc, err)
 			continue
 		}
 		if got, want := channel, tt.channel; !got.Equal(want) {

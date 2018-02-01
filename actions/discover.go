@@ -9,6 +9,8 @@ var (
 	fnReadDir = ioutil.ReadDir
 )
 
+type DiscoverFilesFn func(dir string, filters ...Filter) ([]string, error)
+
 // DiscoverFiles looks for track names in a given directory, and returns them
 // as a slice.
 func DiscoverFiles(dir string, filters ...Filter) ([]string, error) {
