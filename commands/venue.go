@@ -34,6 +34,7 @@ func init() {
 	commands = append(commands, []cli.Command{
 		{
 			Name:     "copy",
+			Aliases:  []string{"cp"},
 			Usage:    "copy tracks with new names",
 			Category: c,
 			Flags:    f,
@@ -41,6 +42,7 @@ func init() {
 			After:    VenueDryRunAction,
 		}, {
 			Name:     "link",
+			Aliases:  []string{"ln"},
 			Usage:    "make links with new names, without removing original files",
 			Category: c,
 			Flags:    f,
@@ -48,6 +50,7 @@ func init() {
 			After:    VenueDryRunAction,
 		}, {
 			Name:     "move",
+			Aliases:  []string{"mv"},
 			Usage:    "move or rename tracks",
 			Category: c,
 			Flags:    f,
@@ -70,10 +73,13 @@ type VenueFlags struct {
 
 func venueFlags(ctx *cli.Context) (VenueFlags, error) {
 	// Validate flags.
-	for _, f := range []string{"patch_file", "src_dir"} {
+	for _, f := range []string{"patch_file"} {
 		if !ctx.IsSet(f) {
 			return VenueFlags{}, fmt.Errorf("missing %s flag", f)
 		}
+	}
+	if !ctx.IsSet("src_dir") {
+		ctx.Set("src_dir", ".")
 	}
 	if !ctx.IsSet("dest_dir") {
 		ctx.Set("dest_dir", ctx.String("src_dir"))
