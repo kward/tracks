@@ -1,6 +1,7 @@
 package tracks
 
 import (
+	"regexp"
 	"testing"
 )
 
@@ -25,14 +26,21 @@ func TestExtractTrack(t *testing.T) {
 	for _, tt := range []struct {
 		desc  string
 		file  string
+		re    *regexp.Regexp
 		track *Track
 	}{
-		{"track-1 session-1", "Track 01-1.wav",
-			&Track{src: "Track 01-1.wav", name: "Track", tnum: 1, snum: 1}},
-		{"track-9 session-2", "Track 09-2.wav",
+		// Avid Pro Tools
+		{"pro tools s2 t1", "Audio 1_02.wav", proToolsRE,
+			&Track{src: "Audio 1_02.wav", name: "Audio", snum: 2, tnum: 1}},
+		{"pro tools s32 t29", "Audio 29_32.wav", proToolsRE,
+			&Track{src: "Audio 29_32.wav", name: "Audio", snum: 32, tnum: 29}},
+		// Waves Tracks
+		{"tracks s1 t3", "Track 03-1.wav", tracksRE,
+			&Track{src: "Track 03-1.wav", name: "Track", tnum: 3, snum: 1}},
+		{"tracks s2 t9", "Track 09-2.wav", tracksRE,
 			&Track{src: "Track 09-2.wav", name: "Track", tnum: 9, snum: 2}},
 	} {
-		got, err := extractTrack(tt.file)
+		got, err := extractTrack(tt.re, tt.file)
 		if err != nil {
 			t.Errorf("%s: extractTrack() unexpected error; %s", tt.desc, err)
 			continue

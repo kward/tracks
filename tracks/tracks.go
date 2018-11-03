@@ -9,11 +9,13 @@ import (
 )
 
 var (
-	trackRE *regexp.Regexp
+	proToolsRE *regexp.Regexp
+	tracksRE   *regexp.Regexp
 )
 
 func init() {
-	trackRE = regexp.MustCompile("(?P<name>[a-zA-Z]+) (?P<channel>[0-9]+)-(?P<session>[0-9]+).wav")
+	proToolsRE = regexp.MustCompile("(?P<name>[a-zA-Z]+) (?P<channel>[0-9]+)_(?P<session>[0-9]+).wav")
+	tracksRE = regexp.MustCompile("(?P<name>[a-zA-Z]+) (?P<channel>[0-9]+)-(?P<session>[0-9]+).wav")
 }
 
 // Tracks is a map of tracks.
@@ -98,19 +100,25 @@ func (t *Track) TrackNum() int   { return t.tnum }
 func (t *Track) SessionNum() int { return t.snum }
 
 // matchTrack returns true if the file name matches the Tracks pattern.
-func matchTrack(file string) bool {
-	return trackRE.MatchString(file)
+func matchTrack(file string) *regexp.Regexp {
+	if proToolsRE.MatchString(file) {
+		return proToolsRE
+	}
+	if tracksRE.MatchString(file) {
+		return tracksRE
+	}
+	return nil
 }
 
 // extractTrack returns a populated Track from a file name.
-func extractTrack(file string) (*Track, error) {
-	name := trackRE.ReplaceAllString(file, "${name}")
-	tnum, err := strconv.Atoi(trackRE.ReplaceAllString(file, "${channel}"))
+func extractTrack(re *regexp.Regexp, file string) (*Track, error) {
+	name := re.ReplaceAllString(file, "${name}")
+	tnum, err := strconv.Atoi(re.ReplaceAllString(file, "${channel}"))
 	if err != nil {
 		return nil, fmt.Errorf("error converting %q channel, %s", file, err)
 	}
 
-	snum, err := strconv.Atoi(trackRE.ReplaceAllString(file, "${session}"))
+	snum, err := strconv.Atoi(re.ReplaceAllString(file, "${session}"))
 	if err != nil {
 		return nil, fmt.Errorf("error converting %q session, %s", file, err)
 	}

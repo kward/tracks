@@ -44,11 +44,12 @@ func ExtractSessions(files []string) (Sessions, error) {
 
 	sessions := make(Sessions)
 	for _, file := range files {
-		if !matchTrack(file) {
+		re := matchTrack(file)
+		if re == nil {
 			fmt.Fprintf(os.Stderr, "ignoring %q\n", file)
 			continue
 		}
-		t, err := extractTrack(file)
+		t, err := extractTrack(re, file)
 		if err != nil {
 			return nil, err
 		}
